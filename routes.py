@@ -6,5 +6,5 @@ routes_blueprint = Blueprint("routes", __name__)
 @routes_blueprint.route("/")
 def product_list():
     products = Product.query.all()
-    return render_template("product/list.html", products=products)
+    return render_template("products/list.html", products=products)
 
