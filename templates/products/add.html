@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Add Product</h1>
+<form method="POST" action="{{ url_for('routes.add_product') }}">
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name"><br><br>
+
+    <label for="sku">SKU:</label><br>
+    <input type="text" id="sku" name="sku"><br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description"></textarea><br><br>
+
+    <label for="price">Price:</label><br>
+    <input type="number" id="price" name="price" step="0.01"><br><br>
+
+    <label for="stock_level">Stock Level:</label><br>
+    <input type="number" id="stock_level" name="stock_level"><br><br>
+
+    <input type="submit" value="Add Product">
+</form>
+{% endblock %}
