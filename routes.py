@@ -24,5 +24,22 @@ def add_product():
     return render_template("products/add.html")
 
 
+@routes_blueprint.route("/products/edit/<int:product_id>", methods=["GET", "POST"])
+def edit_product(product_id):
+    product = Product.query.get_or_404(product_id)
+
+    if request.method == "POST":
+        product.name = request.form["name"]
+        product.sku = request.form["sku"]
+        product.description = request.form["description"]
+        product.price = request.form["price"]
+        product.stock_level = request.form["stock_level"]
+
+        db.session.commit()
+        return redirect(url_for("routes.product_list"))
+    
+    return render_template("products/edit.html", product=product)
+
+
 
 
