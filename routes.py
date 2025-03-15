@@ -3,11 +3,14 @@ from models import Product, db
 
 routes_blueprint = Blueprint("routes", __name__)
 
+# Root Route
 @routes_blueprint.route("/")
 def product_list():
     products = Product.query.all()
     return render_template("products/list.html", products=products)
 
+
+# Add product
 @routes_blueprint.route("/products/add", methods=["GET", "POST"])
 def add_product():
     if request.method == "POST":
@@ -23,7 +26,7 @@ def add_product():
         return redirect(url_for("routes.product_list"))
     return render_template("products/add.html")
 
-
+# Edit Product
 @routes_blueprint.route("/products/edit/<int:product_id>", methods=["GET", "POST"])
 def edit_product(product_id):
     product = Product.query.get_or_404(product_id)
@@ -39,6 +42,14 @@ def edit_product(product_id):
         return redirect(url_for("routes.product_list"))
     
     return render_template("products/edit.html", product=product)
+
+# Delete product
+@routes_blueprint.route("/products/delete/<int:product_id>")
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return redirect(url_for("routes.product_list"))
 
 
 
