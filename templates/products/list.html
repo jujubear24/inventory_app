@@ -10,6 +10,7 @@
             <th>SKU</th>
             <th>Price</th>
             <th>Stock Level</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +20,9 @@
             <td>{{ product.sku }}</td>
             <td>{{ product.price }}</td>
             <td>{{ product.stock_level }}</td>
+            <td>
+                <a href="{{ url_for('routes.edit_product', product_id=product.id) }}">Edit</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

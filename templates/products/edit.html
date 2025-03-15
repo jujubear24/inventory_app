@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Edit Product</h1>
+<form method="POST" action="{{ url_for('routes.edit_product', product_id=product.id) }}">
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name" value="{{ product.name }}"><br><br>
+
+    <label for="sku">SKU:</label><br>
+    <input type="text" id="sku" name="sku" value="{{ product.sku }}"><br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description">{{ product.description }}</textarea><br><br>
+
+    <label for="price">Price:</label><br>
+    <input type="number" id="price" name="price" step="0.01" value="{{ product.price }}"><br><br>
+
+    <label for="stock_level">Stock Level:</label><br>
+    <input type="number" id="stock_level" name="stock_level" value="{{ product.stock_level }}"><br><br>
+
+    <input type="submit" value="Update Product">
+</form>
+{% endblock %}
