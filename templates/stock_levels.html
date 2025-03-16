@@ -18,7 +18,7 @@
             <td>{{ product.sku }}</td>
             <td>{{ product.stock_level }}</td>
             <td>
-                {% if product.stock_level <= 10 %} <span style="color: red;">Low Stock</span>
+                {% if product.stock_level <= product.low_stock_threshold %} <span style="color: red;">Low Stock</span>
                     {% else %}
                     <span>In Stock</span>
                     {% endif %}
