@@ -139,3 +139,13 @@ def stock_level_report():
     products = Product.query.order_by(Product.name).all()
     return render_template("reports/stock_level.html", products=products)
 
+@routes_blueprint.route('/reports/low_stock')
+def low_stock_report():
+    low_stock_products = Product.query.filter(Product.stock_level <= Product.low_stock_threshold).all()
+    return render_template('reports/low_stock.html', products=low_stock_products)
+
+@routes_blueprint.route('/reports/product_summary')
+def product_summary_report():
+    products = Product.query.order_by(Product.name).all()
+    return render_template('reports/product_summary.html', products=products)
+
