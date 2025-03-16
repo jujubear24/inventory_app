@@ -121,7 +121,7 @@ def stock_out(product_id):
         if product.stock_level >= quantity:
             product.stock_level -= quantity
             db.session.commit()
-        return redirect(url_for("routes.product_list)"))
+        return redirect(url_for("routes.product_list"))
     return render_template("products/stock_out.html", product=product)
 
 
