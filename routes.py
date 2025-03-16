@@ -125,6 +125,11 @@ def stock_out(product_id):
     return render_template("products/stock_out.html", product=product)
 
 
+@routes_blueprint.route("/stock_levels")
+def stock_levels():
+    products = Product.query.all()
+    return render_template("stock_levels.html", products=products)
+
 
     
 

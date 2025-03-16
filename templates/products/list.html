@@ -2,7 +2,8 @@
 
 {% block content %}
 <h1>Product List</h1>
-<a href="{{ url_for('routes.add_product') }}">Add Product</a>
+<a href="{{ url_for('routes.add_product') }}">Add Product</a> |
+<a href="{{ url_for('routes.stock_levels') }}">View Stock Levels</a>
 <table>
     <thead>
         <tr>
