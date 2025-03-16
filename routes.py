@@ -101,5 +101,30 @@ def delete_product(product_id):
     return redirect(url_for("routes.product_list"))
 
 
+# In-stock 
+@routes_blueprint.route("/products/stock/in/<int:product_id>", methods=["GET", "POST"])
+def stock_in(product_id):
+    product = Product.query.get_or_404(product_id)
+    if request.method == "POST":
+        quantity = int(request.form["quantity"])
+        product.stock_level += quantity
+        db.session.commit()
+        return redirect(url_for("routes.product_list"))
+    return render_template("products/stock_in.html", product=product)
 
+# Out-stock
+@routes_blueprint.route("products/stock/out/<int:product_id>", methods=["GET", "POST"])
+def stock_out(product_id):
+    product = Product.query.get_or_404(product_id)
+    if request.method == "POST":
+        quantity = int(request.form["quantity"])
+        if product.stock_level >= quantity:
+            product.stock_level -= quantity
+            db.session.commit()
+        return redirect(url_for("routes.product)_list"))
+    return render_template("products/stock_out.html", product=product)
+
+
+
+    
 
