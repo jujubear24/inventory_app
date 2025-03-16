@@ -9,6 +9,8 @@ class Product(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
     stock_level = db.Column(db.Integer, default=0)
+    low_stock_threshold = db.Column(db.Integer, default=10)
+    
 
     def __repr__(self):
         return f'<Product {self.name}>'

@@ -19,6 +19,7 @@ def add_product():
         description = request.form.get("description")
         price = request.form.get("price")
         stock_level = request.form.get("stock_level")
+        low_stock_threshold = request.form.get("low_stock_threshold")
 
         errors ={}
 
@@ -45,7 +46,7 @@ def add_product():
         if errors:
             return render_template("products/add/html", errors=errors)
 
-        new_product = Product(name=name, sku=sku, description=description, price=price, stock_level=stock_level)
+        new_product = Product(name=name, sku=sku, description=description, price=price, stock_level=stock_level, low_stock_threshold=low_stock_threshold)
         db.session.add(new_product)
         db.session.commit()
         return redirect(url_for("routes.product_list"))
@@ -62,6 +63,7 @@ def edit_product(product_id):
         product.description = request.form.get("description")
         product.price = request.form.get("price")
         product.stock_level = request.form.get("stock_level")
+        low_stock_threshold = request.form.get("low_stock_threshold")
 
         errors = {}
 
@@ -86,6 +88,8 @@ def edit_product(product_id):
         
         if errors:
             return render_template("products/edit.html", product=product, errors=errors)
+
+        product.low_stock_threshold = low_stock_threshold
 
         db.session.commit()
         return redirect(url_for("routes.product_list"))
@@ -131,5 +135,4 @@ def stock_levels():
     return render_template("stock_levels.html", products=products)
 
 
-    
 

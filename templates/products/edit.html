@@ -26,5 +26,9 @@
     <input type="number" id="stock_level" name="stock_level" value="{{ product.stock_level }}"><br><br>
 
     <input type="submit" value="Update Product">
+
+    <label for="low_stock_threshold">Low Stock Threshold:</label><br>
+    <input type="number" id="low_stock_threshold" name="low_stock_threshold"
+        value="{{ product.low_stock_threshold }}"><br><br>
 </form>
 {% endblock %}
