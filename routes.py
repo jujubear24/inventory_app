@@ -7,7 +7,7 @@ routes_blueprint = Blueprint("routes", __name__)
 @routes_blueprint.route("/")
 def product_list():
     products = Product.query.all()
-    return render_template("products/list.html", products=products)
+    return render_template("/products/list.html", products=products)
 
 
 # Add product
@@ -113,7 +113,7 @@ def stock_in(product_id):
     return render_template("products/stock_in.html", product=product)
 
 # Out-stock
-@routes_blueprint.route("products/stock/out/<int:product_id>", methods=["GET", "POST"])
+@routes_blueprint.route("/products/stock/out/<int:product_id>", methods=["GET", "POST"])
 def stock_out(product_id):
     product = Product.query.get_or_404(product_id)
     if request.method == "POST":
@@ -121,7 +121,7 @@ def stock_out(product_id):
         if product.stock_level >= quantity:
             product.stock_level -= quantity
             db.session.commit()
-        return redirect(url_for("routes.product)_list"))
+        return redirect(url_for("routes.product_list)"))
     return render_template("products/stock_out.html", product=product)
 
 

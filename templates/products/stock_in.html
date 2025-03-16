@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Stock In: {{ product.name }}</h1>
+<form method="POST" action="{{ url_for('routes.stock_in', product_id=product.id) }}">
+    <label for="quantity">Quantity:</label><br>
+    <input type="number" id="quantity" name="quantity"><br><br>
+    <input type="submit" value="Add Stock">
+</form>
+{% endblock %}
+

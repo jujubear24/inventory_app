@@ -23,7 +23,9 @@
             <td>
                 <a href="{{ url_for('routes.edit_product', product_id=product.id) }}">Edit</a> |
                 <a href="{{ url_for('routes.delete_product', product_id=product.id) }}"
-                    onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">Delete</a>
+                    onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">Delete</a> | 
+                <a href="{{ url_for('routes.stock_in', product_id=product.id) }}">Stock In</a> |
+                <a href="{{ url_for('routes.stock_out', product_id=product.id) }}">Stock Out</a>
             </td>
         </tr>
         {% endfor %}
