@@ -2,8 +2,29 @@
 
 {% block content %}
 <h1>Product List</h1>
+
+<h2>Low Stock Alerts:</h2>
+{% set low_stock_products = [] %}
+{% for product in products %}
+    {% if product.stock_level <= product.low_stock_threshold %}
+        {% set _ = low_stock_products.append(product) %}
+    {% endif %}
+{% endfor %}
+
+{% if low_stock_products %}
+    <ul>
+        {% for product in low_stock_products %}
+            <li>{{ product.name }} (Current Stock: {{ product.stock_level }}, Threshold: {{ product.low_stock_threshold }})</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No low stock alerts.</p>
+
+{% endif %}
+
 <a href="{{ url_for('routes.add_product') }}">Add Product</a> |
-<a href="{{ url_for('routes.stock_levels') }}">View Stock Levels</a>
+<a href="{{ url_for('routes.stock_levels') }}">View Stock Levels</a> | 
+<a href="{{ url_for('routes.stock_level_report') }}">Stock Level Report</a>
 <table>
     <thead>
         <tr>
@@ -20,7 +41,14 @@
             <td>{{ product.name }}</td> 
             <td>{{ product.sku }}</td> 
             <td>{{ product.price }}</td>
-            <td>{{ product.stock_level }}</td>
+            <td>
+                {% if product.stock_level <= product.low_stock_threshold %} 
+                    <span style="color: red;">{{ product.stock_level }}</span>
+                {% else %}
+                    <span>{{ product.stock_level }}</span>
+                {% endif %}
+            </td>
+
             <td>
                 <a href="{{ url_for('routes.edit_product', product_id=product.id) }}">Edit</a> |
                 <a href="{{ url_for('routes.delete_product', product_id=product.id) }}"

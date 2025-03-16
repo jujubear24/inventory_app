@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Stock Level Report</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>SKU</th>
+            <th>Current Stock Level</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.sku }}</td>
+            <td>{{ product.stock_level }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('routes.product_list') }}">Back to Product List</a>
+{% endblock %}
+
