@@ -149,3 +149,8 @@ def product_summary_report():
     products = Product.query.order_by(Product.name).all()
     return render_template('reports/product_summary.html', products=products)
 
+@routes_blueprint.route('/reports/product_value')
+def product_value_report():
+    products = Product.query.all()
+    total_value = sum(product.price * product.stock_level for product in products)
+    return render_template('reports/product_value.html', products=products, total_value=total_value)
