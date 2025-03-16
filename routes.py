@@ -14,11 +14,36 @@ def product_list():
 @routes_blueprint.route("/products/add", methods=["GET", "POST"])
 def add_product():
     if request.method == "POST":
-        name = request.form["name"]
-        sku = request.form["sku"]
-        description = request.form["description"]
-        price = request.form["price"]
-        stock_level = request.form["stock_level"]
+        name = request.form.get("name")
+        sku = request.form.get("sku")
+        description = request.form.get("description")
+        price = request.form.get("price")
+        stock_level = request.form.get("stock_level")
+
+        errors ={}
+
+        if not name:
+            errors["name"] = "Name is required"
+        if not sku:
+            errors["sku"] = "SKU is required"
+        if not price:
+            errors["Price"] = "Price is required"
+        else:
+            try:
+                float(price)
+            except ValueError:
+                errors["price"] = "Price must be a number"
+    
+        if not stock_level:
+            errors["stock_level"] = "Stock level is required"
+        else:
+            try:
+                int(stock_level)
+            except ValueError:
+                errors["stock_level"] = "Stock level must be an integer"
+        
+        if errors:
+            return render_template("products/add/html", errors=errors)
 
         new_product = Product(name=name, sku=sku, description=description, price=price, stock_level=stock_level)
         db.session.add(new_product)
@@ -32,11 +57,35 @@ def edit_product(product_id):
     product = Product.query.get_or_404(product_id)
 
     if request.method == "POST":
-        product.name = request.form["name"]
-        product.sku = request.form["sku"]
-        product.description = request.form["description"]
-        product.price = request.form["price"]
-        product.stock_level = request.form["stock_level"]
+        product.name = request.form.get("name")
+        product.sku = request.form.get("sku")
+        product.description = request.form.get("description")
+        product.price = request.form.get("price")
+        product.stock_level = request.form.get("stock_level")
+
+        errors = {}
+
+        if not product.name:
+            errors["name"] = "Name is required"
+        if not product.sku:
+            errors["sku"] = "SKU is required"
+        if not product.price:
+            errors["price"] = "Price is required"
+        else:
+            try:
+                float(product.price)
+            except ValueError:
+                errors["price"] = "Price must be a number"
+        if not product.stock_level:
+            errors["stock_level"] = "Stock level is required"
+        else:
+            try:
+                int(product.stock_level)
+            except ValueError:
+                errors["stock_level"] = "Stock level must be an integer"
+        
+        if errors:
+            return render_template("products/edit.html", product=product, errors=errors)
 
         db.session.commit()
         return redirect(url_for("routes.product_list"))

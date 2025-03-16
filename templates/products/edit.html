@@ -2,6 +2,13 @@
 
 {% block content %}
 <h1>Edit Product</h1>
+{% if errors %}
+    <ul style="color: red">
+        {% for error in errors.values() %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 <form method="POST" action="{{ url_for('routes.edit_product', product_id=product.id) }}">
     <label for="name">Name:</label><br>
     <input type="text" id="name" name="name" value="{{ product.name }}"><br><br>
