@@ -4,13 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% 1 block title %} Inventory Management System{% endblock %}</title>
-    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
+    <title>{%  block title %} Inventory Management System{% endblock %}</title>
+    <link href="{{ url_for('static', filename='css/output.css') }}?v={{ config['CACHE_BUSTER'] }}" rel="stylesheet">
+
 </head>
 
-<body>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen">
 
-    {% block content %} {% endblock %}
+        <aside class="w-64 bg-gray-800 text-white p-4">
+            <div class="text-2xl font-semibold mb-6">StockTrack</div>
+            <nav>
+                <a href="{{ url_for('routes.product_list') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Product List</a>
+                <a href="{{ url_for('routes.stock_levels') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Stock Levels</a>
+                <a href="{{ url_for('routes.stock_level_report') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Stock Level
+                    Report</a>
+                <a href="{{ url_for('routes.low_stock_report') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Low-Stock
+                    Report</a>
+                <a href="{{ url_for('routes.product_summary_report') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Product
+                    Summary Report</a>
+                <a href="{{ url_for('routes.product_value_report') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Product
+                    Value Report</a>
+                <a href="{{ url_for('routes.add_product') }}" class="block p-2 hover:bg-gray-700 rounded mb-2">Add Product</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 overflow-y-auto">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </body>
-
 </html>

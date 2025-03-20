@@ -1,8 +1,10 @@
 from flask import Flask
+import time 
 from models import db
 from routes import routes_blueprint 
 
 app = Flask(__name__) 
+app.config['CACHE_BUSTER'] = int(time.time())
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'  # Database URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
 
