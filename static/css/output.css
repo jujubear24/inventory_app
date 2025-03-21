@@ -28,9 +28,12 @@
     --color-green-700: oklch(0.527 0.154 150.069);
     --color-green-800: oklch(0.448 0.119 151.328);
     --color-green-900: oklch(0.393 0.095 152.535);
+    --color-blue-50: oklch(0.97 0.014 254.604);
     --color-blue-100: oklch(0.932 0.032 255.585);
     --color-blue-500: oklch(0.623 0.214 259.815);
     --color-blue-600: oklch(0.546 0.245 262.881);
+    --color-blue-700: oklch(0.488 0.243 264.376);
+    --color-blue-800: oklch(0.424 0.199 265.638);
     --color-indigo-500: oklch(0.585 0.233 277.117);
     --color-indigo-600: oklch(0.511 0.262 276.966);
     --color-indigo-700: oklch(0.457 0.24 277.023);
@@ -1237,6 +1240,9 @@
   .border-amber-500 {
     border-color: var(--color-amber-500);
   }
+  .border-blue-500 {
+    border-color: var(--color-blue-500);
+  }
   .border-gray-200 {
     border-color: var(--color-gray-200);
   }
@@ -1275,6 +1281,9 @@
   }
   .bg-amber-600 {
     background-color: var(--color-amber-600);
+  }
+  .bg-blue-50 {
+    background-color: var(--color-blue-50);
   }
   .bg-blue-100 {
     background-color: var(--color-blue-100);
@@ -1735,6 +1744,12 @@
   }
   .text-blue-600 {
     color: var(--color-blue-600);
+  }
+  .text-blue-700 {
+    color: var(--color-blue-700);
+  }
+  .text-blue-800 {
+    color: var(--color-blue-800);
   }
   .text-gray-400 {
     color: var(--color-gray-400);
@@ -2362,6 +2377,11 @@
   .focus\:ring-amber-500 {
     &:focus {
       --tw-ring-color: var(--color-amber-500);
+    }
+  }
+  .focus\:ring-blue-500 {
+    &:focus {
+      --tw-ring-color: var(--color-blue-500);
     }
   }
   .focus\:ring-green-500 {
