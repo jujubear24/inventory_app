@@ -8,8 +8,8 @@ class Product(db.Model):
     sku = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Float, nullable=False)
-    stock_level = db.Column(db.Integer, default=0)
-    low_stock_threshold = db.Column(db.Integer, default=10)
+    stock_level = db.Column(db.Integer, default=0, nullable=False)
+    low_stock_threshold = db.Column(db.Integer, default=10, nullable=False)
     
 
     def __repr__(self):

@@ -3,67 +3,86 @@
 {% block title %}Product List{% endblock %}
 
 {% block content %}
-    <h1>Product List</h1>
+<h1 class="text-2xl font-semibold mb-4">Product List</h1>
 
-<h2>Low Stock Alerts:</h2>
-{% set low_stock_products = [] %}
-{% for product in products %}
-    {% if product.stock_level <= product.low_stock_threshold %}
-        {% set _ = low_stock_products.append(product) %}
+<div class="mb-4">
+    <h2 class="text-lg font-semibold mb-2">Low Stock Alerts:</h2>
+    {% set low_stock_products = [] %}
+    {% for product in products %}
+        {% if product.stock_level <= product.low_stock_threshold %} 
+            {% set _ = low_stock_products.append(product) %} 
+        {% endif%} 
+    {% endfor %} 
+    {% if low_stock_products %} 
+        <ul class="list-disc list-inside">
+            {% for product in low_stock_products %}
+                <li>{{ product.name }}, (Current Stock: {{ product.stock_level }}, Threshold: {{ product.low_stock_threshold }})
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No low stock alerts.</p>
     {% endif %}
-{% endfor %}
+</div>
 
-{% if low_stock_products %}
-    <ul>
-        {% for product in low_stock_products %}
-            <li>{{ product.name }} (Current Stock: {{ product.stock_level }}, Threshold: {{ product.low_stock_threshold }})</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No low stock alerts.</p>
-
-{% endif %}
-
-<a href="{{ url_for('routes.add_product') }}">Add Product</a> |
-<a href="{{ url_for('routes.stock_levels') }}">View Stock Levels</a> | 
-<a href="{{ url_for('routes.stock_level_report') }}">Stock Level Report</a> | 
-<a href="{{ url_for('routes.low_stock_report') }}">Low-Stock Report</a> | 
-<a href="{{ url_for('routes.product_summary_report') }}">Product Summary Report</a> |
-<a href="{{ url_for('routes.product_value_report') }}">Product Value Report</a>
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>SKU</th>
-            <th>Price</th>
-            <th>Stock Level</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for product in products %}
-        <tr>
-            <td>{{ product.name }}</td> 
-            <td>{{ product.sku }}</td> 
-            <td>{{ product.price }}</td>
-            <td>
-                {% if product.stock_level <= product.low_stock_threshold %} 
-                    <span style="color: red;">{{ product.stock_level }}</span>
-                {% else %}
-                    <span>{{ product.stock_level }}</span>
-                {% endif %}
-            </td>
-
-            <td>
-                <a href="{{ url_for('routes.edit_product', product_id=product.id) }}">Edit</a> |
-                <a href="{{ url_for('routes.delete_product', product_id=product.id) }}"
-                    onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">Delete</a> | 
-                <a href="{{ url_for('routes.stock_in', product_id=product.id) }}">Stock In</a> |
-                <a href="{{ url_for('routes.stock_out', product_id=product.id) }}">Stock Out</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="bg-white shadow-md rounded-md overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    SKU
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock Level
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for product in products %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-600">{{ product.name }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-600">{{ product.sku }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-600">{{ product.price }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {% if product.stock_level <= product.low_stock_threshold %} <span class="text-red-500">{{
+                        product.stock_level }}</span>
+                        {% else %}
+                        <span class="text-sm text-gray-600">{{ product.stock_level }}</span>
+                        {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <a href="{{ url_for('routes.edit_product', product_id=product.id) }}"
+                        class="text-blue-500 hover:underline">Edit</a> |
+                    <a href="{{ url_for('routes.delete_product', product_id=product.id) }}"
+                        class="text-red-500 hover:underline"
+                        onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">Delete</a> |
+                    <a href="{{ url_for('routes.stock_in', product_id=product.id) }}"
+                        class="text-green-500 hover:underline">Stock In</a> |
+                    <a href="{{ url_for('routes.stock_out', product_id=product.id) }}"
+                        class="text-yellow-500 hover:underline">Stock Out</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
+
+
+
 
