@@ -2293,6 +2293,12 @@
       }
     }
   }
+  .focus\:border {
+    &:focus {
+      border-style: var(--tw-border-style);
+      border-width: 1px;
+    }
+  }
   .focus\:border-transparent {
     &:focus {
       border-color: transparent;
