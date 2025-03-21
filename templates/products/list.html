@@ -112,19 +112,40 @@
                 </path>
             </svg>
         </div>
-        <div class="ml-3">
-            <h3 class="text-sm font-medium text-amber-800">Low Stock Alerts ({{ low_stock_count }})</h3>
+        <div class="ml-3 flex-1">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-medium text-amber-800">Low Stock Alerts ({{ low_stock_count }})</h3>
+                <a href="{{ url_for('routes.stock_levels') }}"
+                    class="text-xs text-amber-600 hover:text-amber-800 font-medium">View Inventory Status →</a>
+            </div>
             <div class="mt-2 text-sm text-amber-700">
-                <ul class="list-disc list-inside">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {% for product in products %}
-                    {% if product.stock_level <= product.low_stock_threshold %} <li>{{ product.name }} (Current Stock:
-                        {{ product.stock_level }}, Threshold: {{ product.low_stock_threshold }})</li>
-                        {% endif %}
-                        {% endfor %}
-                </ul>
+                    {% if product.stock_level <= product.low_stock_threshold %} <div
+                        class="flex justify-between items-center border border-amber-200 rounded-md p-2 bg-amber-50">
+                        <div>
+                            <div class="font-medium">{{ product.name }}</div>
+                            <div class="text-xs text-amber-700">Stock: <span class="font-semibold">{{
+                                    product.stock_level }}</span> / Threshold: {{ product.low_stock_threshold }}</div>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('routes.stock_in', product_id=product.id) }}"
+                                class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
+                                title="Stock In">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </a>
+                        </div>
+                </div>
+                {% endif %}
+                {% endfor %}
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endif %}
 
@@ -245,7 +266,6 @@
     </table>
 </div>
 {% endblock %}
-
 
 
 
