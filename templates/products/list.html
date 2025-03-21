@@ -167,7 +167,7 @@
     </div>
 
     <!-- Table -->
-    <table class="min-w-full divide-y divide-gray-200">
+    <table class="min-w-full divide-y divide-gray-200" id="productTable">
         <thead class="bg-gray-50">
             <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -265,6 +265,32 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get the search input
+        const searchInput = document.querySelector('input[placeholder="Search products..."]');
+
+        // Add event listener for keyup
+        searchInput.addEventListener('keyup', function () {
+            const searchTerm = this.value.toLowerCase();
+            const tableRows = document.querySelectorAll('#productTable tbody tr');
+
+            // Loop through all table rows
+            tableRows.forEach(row => {
+                const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const sku = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                // Show or hide based on search term
+                if (name.includes(searchTerm) || sku.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
 
 
