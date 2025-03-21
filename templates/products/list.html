@@ -115,7 +115,7 @@
         <div class="ml-3 flex-1">
             <div class="flex justify-between items-center">
                 <h3 class="text-sm font-medium text-amber-800">Low Stock Alerts ({{ low_stock_count }})</h3>
-                <a href="{{ url_for('routes.stock_levels') }}"
+                <a href="{{ url_for('routes.inventory_status') }}"
                     class="text-xs text-amber-600 hover:text-amber-800 font-medium">View Inventory Status →</a>
             </div>
             <div class="mt-2 text-sm text-amber-700">
@@ -266,6 +266,7 @@
     </table>
 </div>
 {% endblock %}
+
 
 
 

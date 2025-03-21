@@ -170,10 +170,10 @@ def stock_out(product_id: int) -> Union[str, Response]:
     return render_template("products/stock_out.html", product=product)
 
 
-@routes_blueprint.route("/stock_levels")
-def stock_levels() -> str:
+@routes_blueprint.route("/inventory_status")
+def inventory_status() -> str:
     products: List[Product] = Product.query.all()
-    return render_template("stock_levels.html", products=products)
+    return render_template("inventory_status.html", products=products)
 
 
 @routes_blueprint.route('/reports/low_stock')
