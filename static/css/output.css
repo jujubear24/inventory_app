@@ -1249,6 +1249,9 @@
   .border-gray-300 {
     border-color: var(--color-gray-300);
   }
+  .border-green-500 {
+    border-color: var(--color-green-500);
+  }
   .border-purple-800\/30 {
     border-color: color-mix(in oklab, var(--color-purple-800) 30%, transparent);
   }
@@ -1774,6 +1777,9 @@
   }
   .text-green-600 {
     color: var(--color-green-600);
+  }
+  .text-green-700 {
+    color: var(--color-green-700);
   }
   .text-green-800 {
     color: var(--color-green-800);
