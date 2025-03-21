@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, Response
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Any, Union, Optional, Tuple
 from models import Product, db
 
 routes_blueprint = Blueprint("routes", __name__)
@@ -175,10 +175,6 @@ def stock_levels() -> str:
     products: List[Product] = Product.query.all()
     return render_template("stock_levels.html", products=products)
 
-@routes_blueprint.route("/reports/stock_level")
-def stock_level_report() -> str:
-    products: List[Product] = Product.query.order_by(Product.name).all()
-    return render_template("reports/stock_level.html", products=products)
 
 @routes_blueprint.route('/reports/low_stock')
 def low_stock_report() -> str:
@@ -187,10 +183,12 @@ def low_stock_report() -> str:
     ).all()
     return render_template('reports/low_stock.html', products=low_stock_products)
 
+
 @routes_blueprint.route('/reports/product_summary')
 def product_summary_report() -> str:
     products: List[Product] = Product.query.order_by(Product.name).all()
     return render_template('reports/product_summary.html', products=products)
+
 
 @routes_blueprint.route('/reports/product_value')
 def product_value_report() -> str:
@@ -198,6 +196,8 @@ def product_value_report() -> str:
     total_value: float = sum(product.price * product.stock_level for product in products)
     return render_template('reports/product_value.html', products=products, total_value=total_value)
 
+
+            
 
 
 
