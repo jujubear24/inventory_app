@@ -1,29 +1,138 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<h1>Product Summary Report</h1>
-<table>
-    <thead>
-        <tr>
-            <th>Product Name</th>
-            <th>SKU</th>
-            <th>Price</th>
-            <th>Current Stock Level</th>
-            <th>Low Stock Threshold</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for product in products %}
-        <tr>
-            <td>{{ product.name }}</td>
-            <td>{{ product.sku }}</td>
-            <td>{{ product.price }}</td>
-            <td>{{ product.stock_level }}</td>
-            <td>{{ product.low_stock_threshold }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<a href="{{ url_for('routes.product_list') }}">Back to Product List</a>
-{% endblock %}
+{% block title %}Product Summary Report{% endblock %}
 
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Product Summary Report</h1>
+    <a href="{{ url_for('routes.product_list') }}"
+        class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300 transition-colors">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-md mb-6">
+    <div class="flex">
+        <div class="flex-shrink-0 text-purple-500">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-purple-800">Product Summary Report</h3>
+            <div class="mt-2 text-sm text-purple-700">
+                <p>This report provides a comprehensive summary of all products in your inventory.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="p-4 border-b border-gray-200">
+        <div class="relative">
+            <input type="text" id="summarySearchInput" placeholder="Search products..."
+                class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Product Name
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    SKU
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock Level
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Low Stock Threshold
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for product in products %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-500">{{ product.sku }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${{ "%.2f"|format(product.price) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm 
+                        {% if product.stock_level <= 0 %}
+                            text-red-600
+                        {% elif product.stock_level <= product.low_stock_threshold %}
+                            text-amber-600
+                        {% else %}
+                            text-gray-900
+                        {% endif %}
+                    ">{{ product.stock_level }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ product.low_stock_threshold }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {% if product.stock_level <= 0 %} <span
+                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        Out of Stock
+                        </span>
+                        {% elif product.stock_level <= product.low_stock_threshold %} <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
+                            Low Stock
+                            </span>
+                            {% else %}
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                In Stock
+                            </span>
+                            {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('summarySearchInput');
+        searchInput.addEventListener('keyup', function () {
+            const searchTerm = this.value.toLowerCase();
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            tableRows.forEach(row => {
+                const productName = row.querySelector('td:first-child').textContent.toLowerCase();
+                const sku = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                if (productName.includes(searchTerm) || sku.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
