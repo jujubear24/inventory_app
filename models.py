@@ -1,16 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
+from typing import Any
 
-db = SQLAlchemy()
+db: SQLAlchemy = SQLAlchemy()
 
 class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    sku = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.Text)
-    price = db.Column(db.Float, nullable=False)
-    stock_level = db.Column(db.Integer, default=0, nullable=False)
-    low_stock_threshold = db.Column(db.Integer, default=10, nullable=False)
+    __tablename__: str = 'product'
     
-
-    def __repr__(self):
+    id: Any = db.Column(db.Integer, primary_key=True)
+    name: Any = db.Column(db.String(100), nullable=False)
+    sku: Any = db.Column(db.String(50), unique=True, nullable=False)
+    description: Any = db.Column(db.Text)
+    price: Any = db.Column(db.Float, nullable=False)
+    stock_level: Any = db.Column(db.Integer, default=0, nullable=False)
+    low_stock_threshold: Any = db.Column(db.Integer, default=10, nullable=False)
+    
+    def __repr__(self) -> str:
         return f'<Product {self.name}>'
+

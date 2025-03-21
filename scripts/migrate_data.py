@@ -3,29 +3,30 @@
 This script should be run as a one-time fix to ensure all low_stock_threshold
 values in the Product table are properly stored as integers.
 """
+from typing import Any, List
 from app import app
 from models import db, Product
 
-def run_migration():
+def run_migration() -> None:
     with app.app_context():
         # Get all products
-        products = Product.query.all()
+        products: List[Product] = Product.query.all()
         
         # Track how many records were updated
-        update_count = 0
+        update_count: int = 0
         
         for product in products:
             # Check if the value is not already an integer
             if not isinstance(product.low_stock_threshold, int):
                 try:
                     # Try to convert to integer
-                    original_value = product.low_stock_threshold
+                    original_value: Any = product.low_stock_threshold
                     product.low_stock_threshold = int(float(original_value))
                     update_count += 1
                     print(f"Updated product {product.id} ({product.name}): {original_value} -> {product.low_stock_threshold}")
                 except (ValueError, TypeError):
                     # If conversion fails, set a default value
-                    original_value = product.low_stock_threshold
+                    original_value: Any = product.low_stock_threshold
                     product.low_stock_threshold = 10  # Using your model's default
                     update_count += 1
                     print(f"Failed to convert {original_value} for product {product.id} ({product.name}), set to default: 10")
@@ -40,3 +41,5 @@ def run_migration():
 
 if __name__ == "__main__":
     run_migration()
+
+

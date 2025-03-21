@@ -1,27 +1,28 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, Response
+from typing import Dict, List, Union, Optional
 from models import Product, db
 
 routes_blueprint = Blueprint("routes", __name__)
 
 # Root Route
 @routes_blueprint.route("/")
-def product_list():
-    products = Product.query.all()
+def product_list() -> str:
+    products: List[Product] = Product.query.all()
     return render_template("/products/list.html", products=products)
 
 
 # Add product
 @routes_blueprint.route("/products/add", methods=["GET", "POST"])
-def add_product():
+def add_product() -> Union[str, Response]:
     if request.method == "POST":
-        name = request.form.get("name")
-        sku = request.form.get("sku")
-        description = request.form.get("description")
-        price = request.form.get("price", "0")
-        stock_level = request.form.get("stock_level")
-        low_stock_threshold = request.form.get("low_stock_threshold")
+        name: str = request.form.get("name", "")
+        sku: str = request.form.get("sku", "")
+        description: str = request.form.get("description", "")
+        price: str = request.form.get("price", "0")
+        stock_level: str = request.form.get("stock_level", "")
+        low_stock_threshold: str = request.form.get("low_stock_threshold", "")
 
-        errors ={}
+        errors: Dict[str, str] = {}
 
         if not name:
             errors["name"] = "Name is required"
@@ -31,7 +32,7 @@ def add_product():
             errors["Price"] = "Price is required"
         else:
             try:
-                price = float(price)
+                price_float: float = float(price)
             except ValueError:
                 errors["price"] = "Price must be a number"
     
@@ -39,7 +40,7 @@ def add_product():
             errors["stock_level"] = "Stock level is required"
         else:
             try:
-                stock_level = int(stock_level)
+                stock_level_int: int = int(stock_level)
             except ValueError:
                 errors["stock_level"] = "Stock level must be an integer"
         
@@ -47,15 +48,26 @@ def add_product():
             errors["low_stock_threshold"] = "Low stock threshold is required"
         else:
             try:
-                low_stock_threshold = int(low_stock_threshold)
+                low_stock_threshold_int: int = int(low_stock_threshold)
             except ValueError:
                 errors["low_stock_threshold"] = "Low stock threshold must be an integer"
 
         if errors:
-            # Fixed the template path (was "products/add/html")
             return render_template("products/add.html", errors=errors)
 
-        new_product = Product(name=name, sku=sku, description=description, price=price, stock_level=stock_level, low_stock_threshold=low_stock_threshold)
+        # Convert only after validation
+        price_float = float(price)
+        stock_level_int = int(stock_level)
+        low_stock_threshold_int = int(low_stock_threshold)
+
+        new_product: Product = Product(
+            name=name, 
+            sku=sku, 
+            description=description, 
+            price=price_float, 
+            stock_level=stock_level_int, 
+            low_stock_threshold=low_stock_threshold_int
+        )
         db.session.add(new_product)
         db.session.commit()
         return redirect(url_for("routes.product_list"))
@@ -63,56 +75,61 @@ def add_product():
 
 # Edit Product
 @routes_blueprint.route("/products/edit/<int:product_id>", methods=["GET", "POST"])
-def edit_product(product_id):
-    product = Product.query.get_or_404(product_id)
+def edit_product(product_id: int) -> Union[str, Response]:
+    product: Product = Product.query.get_or_404(product_id)
 
     if request.method == "POST":
-        product.name = request.form.get("name")
-        product.sku = request.form.get("sku")
-        product.description = request.form.get("description")
-        price = request.form.get("price")
-        stock_level = request.form.get("stock_level")
-        low_stock_threshold = request.form.get("low_stock_threshold")
+        product.name = request.form.get("name", "")
+        product.sku = request.form.get("sku", "")
+        product.description = request.form.get("description", "")
+        price: str = request.form.get("price", "")
+        stock_level: str = request.form.get("stock_level", "")
+        low_stock_threshold: str = request.form.get("low_stock_threshold", "")
 
-        errors = {}
+        errors: Dict[str, str] = {}
 
         if not product.name:
             errors["name"] = "Name is required"
         if not product.sku:
             errors["sku"] = "SKU is required"
+        
+        price_float: Optional[float] = None
         if not price:
             errors["price"] = "Price is required"
         else:
-            # Fixed: Don't set price=0 before trying to convert
             try:
-                price = float(price)
+                price_float = float(price)
             except ValueError:
                 errors["price"] = "Price must be a number"
         
+        stock_level_int: Optional[int] = None
         if not stock_level:
             errors["stock_level"] = "Stock level is required"
         else:
-            # Fixed: Don't set stock_level=0 before trying to convert
             try:
-                stock_level = int(stock_level)
+                stock_level_int = int(stock_level)
             except ValueError:
                 errors["stock_level"] = "Stock level must be an integer"
 
+        low_stock_threshold_int: Optional[int] = None
         if not low_stock_threshold:
             errors["low_stock_threshold"] = "Low stock threshold is required"
         else:
-            # Fixed: Don't set low_stock_threshold=0 before trying to convert
             try:
-                low_stock_threshold = int(low_stock_threshold)
+                low_stock_threshold_int = int(low_stock_threshold)
             except ValueError:
                 errors["low_stock_threshold"] = "Low stock threshold must be an integer"
         
         if errors:
             return render_template("products/edit.html", product=product, errors=errors)
 
-        product.price = price
-        product.stock_level = stock_level
-        product.low_stock_threshold = low_stock_threshold
+        # Only update if validation passed
+        if price_float is not None:
+            product.price = price_float
+        if stock_level_int is not None:
+            product.stock_level = stock_level_int
+        if low_stock_threshold_int is not None:
+            product.low_stock_threshold = low_stock_threshold_int
 
         db.session.commit()
         return redirect(url_for("routes.product_list"))
@@ -122,8 +139,8 @@ def edit_product(product_id):
 
 # Delete product
 @routes_blueprint.route("/products/delete/<int:product_id>")
-def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
+def delete_product(product_id: int) -> Response:
+    product: Product = Product.query.get_or_404(product_id)
     db.session.delete(product)
     db.session.commit()
     return redirect(url_for("routes.product_list"))
@@ -131,10 +148,10 @@ def delete_product(product_id):
 
 # In-stock 
 @routes_blueprint.route("/products/stock/in/<int:product_id>", methods=["GET", "POST"])
-def stock_in(product_id):
-    product = Product.query.get_or_404(product_id)
+def stock_in(product_id: int) -> Union[str, Response]:
+    product: Product = Product.query.get_or_404(product_id)
     if request.method == "POST":
-        quantity = int(request.form["quantity"])
+        quantity: int = int(request.form["quantity"])
         product.stock_level += quantity
         db.session.commit()
         return redirect(url_for("routes.product_list"))
@@ -142,10 +159,10 @@ def stock_in(product_id):
 
 # Out-stock
 @routes_blueprint.route("/products/stock/out/<int:product_id>", methods=["GET", "POST"])
-def stock_out(product_id):
-    product = Product.query.get_or_404(product_id)
+def stock_out(product_id: int) -> Union[str, Response]:
+    product: Product = Product.query.get_or_404(product_id)
     if request.method == "POST":
-        quantity = int(request.form["quantity"])
+        quantity: int = int(request.form["quantity"])
         if product.stock_level >= quantity:
             product.stock_level -= quantity
             db.session.commit()
@@ -154,30 +171,33 @@ def stock_out(product_id):
 
 
 @routes_blueprint.route("/stock_levels")
-def stock_levels():
-    products = Product.query.all()
+def stock_levels() -> str:
+    products: List[Product] = Product.query.all()
     return render_template("stock_levels.html", products=products)
 
 @routes_blueprint.route("/reports/stock_level")
-def stock_level_report():
-    products = Product.query.order_by(Product.name).all()
+def stock_level_report() -> str:
+    products: List[Product] = Product.query.order_by(Product.name).all()
     return render_template("reports/stock_level.html", products=products)
 
 @routes_blueprint.route('/reports/low_stock')
-def low_stock_report():
-    # This will work once all values are properly stored as integers
-    low_stock_products = Product.query.filter(Product.stock_level <= Product.low_stock_threshold).all()
+def low_stock_report() -> str:
+    low_stock_products: List[Product] = Product.query.filter(
+        Product.stock_level <= Product.low_stock_threshold
+    ).all()
     return render_template('reports/low_stock.html', products=low_stock_products)
 
 @routes_blueprint.route('/reports/product_summary')
-def product_summary_report():
-    products = Product.query.order_by(Product.name).all()
+def product_summary_report() -> str:
+    products: List[Product] = Product.query.order_by(Product.name).all()
     return render_template('reports/product_summary.html', products=products)
 
 @routes_blueprint.route('/reports/product_value')
-def product_value_report():
-    products = Product.query.all()
-    total_value = sum(product.price * product.stock_level for product in products)
+def product_value_report() -> str:
+    products: List[Product] = Product.query.all()
+    total_value: float = sum(product.price * product.stock_level for product in products)
     return render_template('reports/product_value.html', products=products, total_value=total_value)
+
+
 
 
