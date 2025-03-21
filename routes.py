@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, Response
-from typing import Dict, List, Any, Union, Optional, Tuple
+from typing import Dict, List, Union, Optional
 from models import Product, db
 
 routes_blueprint = Blueprint("routes", __name__)
