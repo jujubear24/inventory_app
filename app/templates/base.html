@@ -20,16 +20,16 @@
             <div class="p-4">
                 <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-4">Main</div>
                 <nav class="space-y-1">
-                    <a href="{{ url_for('routes.product_list') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('main.product_list') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Dashboard
                     </a>
-                    <a href="{{ url_for('routes.inventory_status') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('main.inventory_status') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Inventory Status
                     </a>
-                    <a href="{{ url_for('routes.add_product') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('products.add_product') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Add Product
                     </a>
                 </nav>
@@ -37,16 +37,16 @@
                 <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-6">Reports</div>
                 <nav class="space-y-1">
                     <!-- Removed stock_level_report from navigation -->
-                    <a href="{{ url_for('routes.low_stock_report') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('reports.low_stock_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Low Stock Report
                     </a>
-                    <a href="{{ url_for('routes.product_summary_report') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('reports.product_summary_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Product Summary
                     </a>
-                    <a href="{{ url_for('routes.product_value_report') }}"
-                        class="block py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('reports.product_value_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Product Value
                     </a>
                 </nav>

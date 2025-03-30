@@ -186,7 +186,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex space-x-2">
-                            <a href="{{ url_for('routes.stock_in', product_id=product.id) }}"
+                            <a href="{{ url_for('products.stock_in', product_id=product.id) }}"
                                 class="text-green-600 hover:text-green-900" title="Stock In">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -194,7 +194,7 @@
                                         d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </a>
-                            <a href="{{ url_for('routes.stock_out', product_id=product.id) }}"
+                            <a href="{{ url_for('products.stock_out', product_id=product.id) }}"
                                 class="text-amber-600 hover:text-amber-900" title="Stock Out">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -202,7 +202,7 @@
                                         d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </a>
-                            <a href="{{ url_for('routes.edit_product', product_id=product.id) }}"
+                            <a href="{{ url_for('products.edit_product', product_id=product.id) }}"
                                 class="text-indigo-600 hover:text-indigo-900" title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     xmlns="http://www.w3.org/2000/svg">

@@ -88,9 +88,9 @@
                         {% endif %}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <a href="{{ url_for('routes.stock_in', product_id=product.id) }}"
+                    <a href="{{ url_for('products.stock_in', product_id=product.id) }}"
                         class="text-green-600 hover:text-green-900 mr-3">Stock In</a>
-                    <a href="{{ url_for('routes.edit_product', product_id=product.id) }}"
+                    <a href="{{ url_for('products.edit_product', product_id=product.id) }}"
                         class="text-indigo-600 hover:text-indigo-900">Edit</a>
                 </td>
             </tr>
