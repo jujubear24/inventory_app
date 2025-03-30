@@ -1,5 +1,5 @@
 # app/models/product.py
-from app.models import db
+from app.models.db import db
 from typing import Any
 
 class Product(db.Model):
