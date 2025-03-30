@@ -19,7 +19,9 @@ def product_summary_report() -> str:
 
 @reports_bp.route('/product_value')
 def product_value_report() -> str:
-    products: List[Product] = Product.query.all()
-    total_value: float = sum(product.price * product.stock_level for product in products)
+    from app.services import InventoryService
+    total_value = InventoryService.calculate_inventory_value()
+    products = Product.query.all()
     return render_template('reports/product_value.html', products=products, total_value=total_value)
+
 

@@ -8,7 +8,7 @@ main_bp = Blueprint("main", __name__)
 @main_bp.route("/")
 def product_list() -> str:
     products: List[Product] = Product.query.all()
-    return render_template("/products/list.html", products=products)
+    return render_template("products/list.html", products=products)
 
 @main_bp.route("/inventory_status")
 def inventory_status() -> str:
