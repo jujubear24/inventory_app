@@ -1,5 +1,4 @@
 """Test configuration for the inventory app."""
-import os
 
 # Use SQLite in-memory database for testing
 SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'

@@ -1,6 +1,9 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 import os
-from app.models import db 
+
+# Initialize extensions
+db = SQLAlchemy()
 
 def create_app(config_name=None):
     """Application factory for creating Flask app instances"""
@@ -34,4 +37,5 @@ def create_app(config_name=None):
         pass
     
     return app
+
 
