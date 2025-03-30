@@ -1,65 +1,42 @@
 # app/routes/products.py
 from flask import Blueprint, render_template, request, redirect, url_for, Response
 from app.models import db, Product
-from typing import Dict, List, Union, Optional
+from app.utils import validate_product_data, generate_sku
+from typing import  Union
 
 products_bp = Blueprint("products", __name__, url_prefix="/products")
 
 @products_bp.route("/add", methods=["GET", "POST"])
 def add_product() -> Union[str, Response]:
     if request.method == "POST":
-        name: str = request.form.get("name", "")
-        sku: str = request.form.get("sku", "")
-        description: str = request.form.get("description", "")
-        price: str = request.form.get("price", "0")
-        stock_level: str = request.form.get("stock_level", "")
-        low_stock_threshold: str = request.form.get("low_stock_threshold", "")
+        # Collect form data into a dictionary
+        product_data = {
+            "name": request.form.get("name", ""),
+            "sku": request.form.get("sku", ""),
+            "description": request.form.get("description", ""),
+            "price": request.form.get("price", "0"),
+            "stock_level": request.form.get("stock_level", ""),
+            "low_stock_threshold": request.form.get("low_stock_threshold", "")
+        }
 
-        errors: Dict[str, str] = {}
+        # Generate SKU if not provided
+        if not product_data["sku"]:
+            product_data["sku"] = generate_sku(product_data["name"])
 
-        if not name:
-            errors["name"] = "Name is required"
-        if not sku:
-            errors["sku"] = "SKU is required"
-        if not price:
-            errors["Price"] = "Price is required"
-        else:
-            try:
-                price_float: float = float(price)
-            except ValueError:
-                errors["price"] = "Price must be a number"
-    
-        if not stock_level:
-            errors["stock_level"] = "Stock level is required"
-        else:
-            try:
-                stock_level_int: int = int(stock_level)
-            except ValueError:
-                errors["stock_level"] = "Stock level must be an integer"
+        # Validate data
+        errors = validate_product_data(product_data)
         
-        if not low_stock_threshold:
-            errors["low_stock_threshold"] = "Low stock threshold is required"
-        else:
-            try:
-                low_stock_threshold_int: int = int(low_stock_threshold)
-            except ValueError:
-                errors["low_stock_threshold"] = "Low stock threshold must be an integer"
-
         if errors:
             return render_template("products/add.html", errors=errors)
 
-        # Convert only after validation
-        price_float = float(price)
-        stock_level_int = int(stock_level)
-        low_stock_threshold_int = int(low_stock_threshold)
-
+        # Convert to appropriate types after validation
         new_product: Product = Product(
-            name=name, 
-            sku=sku, 
-            description=description, 
-            price=price_float, 
-            stock_level=stock_level_int, 
-            low_stock_threshold=low_stock_threshold_int
+            name=product_data["name"], 
+            sku=product_data["sku"], 
+            description=product_data["description"], 
+            price=float(product_data["price"]), 
+            stock_level=int(product_data["stock_level"]), 
+            low_stock_threshold=int(product_data["low_stock_threshold"])
         )
         db.session.add(new_product)
         db.session.commit()
@@ -71,57 +48,29 @@ def edit_product(product_id: int) -> Union[str, Response]:
     product: Product = Product.query.get_or_404(product_id)
 
     if request.method == "POST":
-        product.name = request.form.get("name", "")
-        product.sku = request.form.get("sku", "")
-        product.description = request.form.get("description", "")
-        price: str = request.form.get("price", "")
-        stock_level: str = request.form.get("stock_level", "")
-        low_stock_threshold: str = request.form.get("low_stock_threshold", "")
+        # Collect form data into a dictionary
+        product_data = {
+            "name": request.form.get("name", ""),
+            "sku": request.form.get("sku", ""),
+            "description": request.form.get("description", ""),
+            "price": request.form.get("price", ""),
+            "stock_level": request.form.get("stock_level", ""),
+            "low_stock_threshold": request.form.get("low_stock_threshold", "")
+        }
 
-        errors: Dict[str, str] = {}
-
-        if not product.name:
-            errors["name"] = "Name is required"
-        if not product.sku:
-            errors["sku"] = "SKU is required"
-        
-        price_float: Optional[float] = None
-        if not price:
-            errors["price"] = "Price is required"
-        else:
-            try:
-                price_float = float(price)
-            except ValueError:
-                errors["price"] = "Price must be a number"
-        
-        stock_level_int: Optional[int] = None
-        if not stock_level:
-            errors["stock_level"] = "Stock level is required"
-        else:
-            try:
-                stock_level_int = int(stock_level)
-            except ValueError:
-                errors["stock_level"] = "Stock level must be an integer"
-
-        low_stock_threshold_int: Optional[int] = None
-        if not low_stock_threshold:
-            errors["low_stock_threshold"] = "Low stock threshold is required"
-        else:
-            try:
-                low_stock_threshold_int = int(low_stock_threshold)
-            except ValueError:
-                errors["low_stock_threshold"] = "Low stock threshold must be an integer"
+        # Validate data
+        errors = validate_product_data(product_data)
         
         if errors:
             return render_template("products/edit.html", product=product, errors=errors)
 
-        # Only update if validation passed
-        if price_float is not None:
-            product.price = price_float
-        if stock_level_int is not None:
-            product.stock_level = stock_level_int
-        if low_stock_threshold_int is not None:
-            product.low_stock_threshold = low_stock_threshold_int
+        # Update product with validated data
+        product.name = product_data["name"]
+        product.sku = product_data["sku"]
+        product.description = product_data["description"]
+        product.price = float(product_data["price"])
+        product.stock_level = int(product_data["stock_level"])
+        product.low_stock_threshold = int(product_data["low_stock_threshold"])
 
         db.session.commit()
         return redirect(url_for("main.product_list"))
@@ -139,9 +88,14 @@ def delete_product(product_id: int) -> Response:
 def stock_in(product_id: int) -> Union[str, Response]:
     product: Product = Product.query.get_or_404(product_id)
     if request.method == "POST":
-        quantity: int = int(request.form["quantity"])
-        product.stock_level += quantity
-        db.session.commit()
+        try:
+            quantity: int = int(request.form["quantity"])
+            if quantity > 0:
+                product.stock_level += quantity
+                db.session.commit()
+        except (ValueError, KeyError):
+            # Handle invalid input gracefully
+            pass
         return redirect(url_for("main.product_list"))
     return render_template("products/stock_in.html", product=product)
 
@@ -149,11 +103,17 @@ def stock_in(product_id: int) -> Union[str, Response]:
 def stock_out(product_id: int) -> Union[str, Response]:
     product: Product = Product.query.get_or_404(product_id)
     if request.method == "POST":
-        quantity: int = int(request.form["quantity"])
-        if product.stock_level >= quantity:
-            product.stock_level -= quantity
-            db.session.commit()
+        try:
+            quantity: int = int(request.form["quantity"])
+            if quantity > 0 and product.stock_level >= quantity:
+                product.stock_level -= quantity
+                db.session.commit()
+        except (ValueError, KeyError):
+            # Handle invalid input gracefully
+            pass
         return redirect(url_for("main.product_list"))
     return render_template("products/stock_out.html", product=product)
+
+
 
 

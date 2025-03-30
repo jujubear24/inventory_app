@@ -2,6 +2,8 @@
 from flask import Blueprint, render_template
 from app.models import Product
 from typing import List
+from app.utils import format_currency
+
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 
@@ -19,9 +21,8 @@ def product_summary_report() -> str:
 
 @reports_bp.route('/product_value')
 def product_value_report() -> str:
-    from app.services import InventoryService
-    total_value = InventoryService.calculate_inventory_value()
-    products = Product.query.all()
-    return render_template('reports/product_value.html', products=products, total_value=total_value)
-
+    products: List[Product] = Product.query.all()
+    total_value = sum(product.price * product.stock_level for product in products)
+    formatted_value = format_currency(total_value)
+    return render_template('reports/product_value.html', products=products, total_value=total_value, formatted_value=formatted_value)
 

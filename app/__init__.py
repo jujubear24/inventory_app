@@ -1,6 +1,7 @@
 from flask import Flask
 from app.models.db import db 
 import os
+from app.utils import get_app_config
 
 
 def create_app(config_name=None):
@@ -18,6 +19,9 @@ def create_app(config_name=None):
     
     # Load instance config (if it exists)
     app.config.from_pyfile('config.py', silent=True)
+
+    #  Utility config
+    app.config.update(get_app_config())
     
     # Initialize db with the app
     db.init_app(app)
@@ -35,5 +39,7 @@ def create_app(config_name=None):
         pass
     
     return app
+
+
 
 
