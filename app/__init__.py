@@ -2,6 +2,7 @@ from flask import Flask
 from app.models.db import db 
 import os
 from app.utils import get_app_config
+from config import get_config
 
 
 def create_app(config_name=None):
@@ -9,13 +10,11 @@ def create_app(config_name=None):
     
     app = Flask(__name__, instance_relative_config=True)
     
-    # Load default configuration
-    app.config.from_object('config.default')
-    
-    # Load environment specific configuration
+    # Get the appropriate config class
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
-    app.config.from_object(f'config.{config_name}')
+
+    app.config.from_object(get_config(config_name))
     
     # Load instance config (if it exists)
     app.config.from_pyfile('config.py', silent=True)
