@@ -1,6 +1,5 @@
 # tests/test_routes/test_products.py
 """Test the product-related routes."""
-import pytest
 
 def test_add_product_get(client):
     """Test the add product form route (GET)."""

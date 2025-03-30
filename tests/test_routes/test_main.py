@@ -1,6 +1,5 @@
 # tests/test_routes/test_main.py
 """Test the main routes."""
-import pytest
 
 def test_product_list(client, sample_products):
     """Test the product list (dashboard) route."""

@@ -4,10 +4,19 @@ This script should be run as a one-time fix to ensure all low_stock_threshold
 values in the Product table are properly stored as integers.
 """
 from typing import Any, List
-from app import app
-from models import db, Product
+import sys
+import os 
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from app import create_app
+from app.models import Product
+from app.models.db import db
+
+
 
 def run_migration() -> None:
+    app  = create_app()
     with app.app_context():
         # Get all products
         products: List[Product] = Product.query.all()

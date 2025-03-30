@@ -19,6 +19,9 @@ def create_app(config_name=None):
     # Load instance config (if it exists)
     app.config.from_pyfile('config.py', silent=True)
 
+    if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite:///'):
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:////{app.instance_path}/inventory.db'
+
     #  Utility config
     app.config.update(get_app_config())
     
