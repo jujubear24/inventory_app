@@ -1,6 +1,6 @@
 # Inventory Management System (Flask)
 
-[![codecov](https://codecov.io/gh/USERNAME/REPO-NAME/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/REPO-NAME)
+[![codecov](https://codecov.io/gh/jujubear24/inventory_app/graph/badge.svg?token=2THBYJRRBE)](https://codecov.io/gh/jujubear24/inventory_app)
 
 This project is a Flask-based web application that provides a simple and efficient solution for managing product inventory. It addresses the challenges faced by small businesses in tracking stock levels, preventing stockouts, and generating reports.
 
