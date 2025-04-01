@@ -1,4 +1,4 @@
-from app.models.db import db, Product
+from app.models import db, Product
 from typing import List, Optional
 
 class InventoryService:
