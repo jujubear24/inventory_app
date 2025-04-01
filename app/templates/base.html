@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} Inventory Management System{% endblock %}</title>
+    <link href="{{ url_for('static', filename='css/output.css') }}?v={{ config['CACHE_BUSTER'] }}" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar with gradient background -->
+        <aside class="w-64 bg-gradient-to-b from-purple-900 to-purple-700 text-white overflow-y-auto">
+            <div class="p-6 border-b border-purple-800/30">
+                <div class="text-2xl font-bold">StockTrack</div>
+            </div>
+
+            <!-- Navigation sections -->
+            <div class="p-4">
+                <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-4">Main</div>
+                <nav class="space-y-1">
+                    <a href="{{ url_for('main.product_list') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('main.inventory_status') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Inventory Status
+                    </a>
+                    <a href="{{ url_for('products.add_product') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Add Product
+                    </a>
+                </nav>
+
+                <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-6">Reports</div>
+                <nav class="space-y-1">
+                    <!-- Removed stock_level_report from navigation -->
+                    <a href="{{ url_for('reports.low_stock_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Low Stock Report
+                    </a>
+                    <a href="{{ url_for('reports.product_summary_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Product Summary
+                    </a>
+                    <a href="{{ url_for('reports.product_value_report') }}"
+                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        Product Value
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-auto">
+            <div class="py-6 px-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
+
