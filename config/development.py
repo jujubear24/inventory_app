@@ -1,4 +1,3 @@
-# config/development.py
 """Development configuration"""
 from .default import Config
 

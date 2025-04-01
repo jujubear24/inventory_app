@@ -1,4 +1,3 @@
-# app/models/product.py
 from app.models.db import db
 from typing import Any
 

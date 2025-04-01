@@ -6,6 +6,6 @@
     "tailwindcss": "^4.0.14"
   },
   "scripts": {
-  "build:css": "npx tailwindcss -i static/css/tailwind.css -o static/css/output.css --watch"
+  "build:css": "npx tailwindcss -i app/static/css/tailwind.css -o app/static/css/output.css --watch"
   }
 }

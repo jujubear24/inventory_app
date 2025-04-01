@@ -1,6 +1,3 @@
-# tests/test_models/test_product.py
-"""Test the Product model."""
-import pytest
 from app.models import Product
 
 def test_product_creation(app):

@@ -1,4 +1,3 @@
-# tests/test_routes/test_main.py
 """Test the main routes."""
 
 def test_product_list(client, sample_products):

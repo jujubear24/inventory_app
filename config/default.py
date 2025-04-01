@@ -1,6 +1,3 @@
-# config/default.py
-"""Default configuration"""
-
 class Config:
     DEBUG = False
     TESTING = False

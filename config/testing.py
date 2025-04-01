@@ -1,4 +1,3 @@
-# config/testing.py
 """Testing configuration"""
 from .default import Config
 
