@@ -32,15 +32,24 @@ class ProductService:
             errors['name'] = "Name is required"
         if not data.get('sku'):
             errors['sku'] = "SKU is required"
-            
+        
         # Validate numeric fields
-        try:
-            if data.get('price'):
+        if data.get('price'):
+            try:
                 float(data['price'])
-        except ValueError:
-            errors['price'] = "Price must be a number"
+            except ValueError:
+                errors['price'] = "Price must be a number"
+        
+        if data.get('stock_level'):
+            try:
+                int(data['stock_level'])
+            except ValueError:
+                errors['stock_level'] = "Stock level must be an integer"
             
-        # Add more validation as needed
+        if data.get('low_stock_threshold'):
+            try:
+                int(data['low_stock_threshold'])
+            except ValueError:
+                errors['low_stock_threshold'] = "Low stock threshold must be an integer"
         
         return errors
-

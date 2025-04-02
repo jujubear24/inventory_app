@@ -18,7 +18,7 @@ class InventoryService:
     @staticmethod
     def adjust_stock(product_id: int, quantity: int) -> Optional[Product]:
         """Adjust stock level for a product."""
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         if not product:
             return None
             
