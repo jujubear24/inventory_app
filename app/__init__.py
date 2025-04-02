@@ -27,6 +27,14 @@ def create_app(config_name=None):
     
     # Initialize db with the app
     db.init_app(app)
+
+    # Register CLI command for database initialization
+    @app.cli.command("init-db")
+    def init_db_command():
+        """Clear existing data and create new tables."""
+        with app.app_context():
+            db.create_all()
+        print("Initialized the database.")
     
     # Register blueprints
     from app.routes import main_bp, products_bp, reports_bp
