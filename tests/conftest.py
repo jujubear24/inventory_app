@@ -47,7 +47,10 @@ def sample_products(app):
         
         # Clean up
         for product in products:
-            db.session.delete(product)
+            # Check if the product still exists before deleting
+            existing_product = db.session.query(Product).get(product.id)
+            if existing_product:
+                db.session.delete(existing_product)
         db.session.commit()
 
 

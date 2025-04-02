@@ -1,4 +1,6 @@
-# tests/test_routes/test_products.py
+from app.models.db import db
+
+
 """Test the product-related routes."""
 
 def test_add_product_get(client):
@@ -72,7 +74,7 @@ def test_stock_in(client, sample_products, app):
     # Check if stock was updated
     with app.app_context():
         from app.models import Product
-        updated_product = Product.query.get(product_id)
+        updated_product = db.session.get(Product, product_id)
         assert updated_product.stock_level == original_stock + 5
 
 def test_stock_out(client, sample_products, app):
@@ -90,6 +92,6 @@ def test_stock_out(client, sample_products, app):
     # Check if stock was updated
     with app.app_context():
         from app.models import Product
-        updated_product = Product.query.get(product_id)
+        updated_product = db.session.get(Product, product_id)
         assert updated_product.stock_level == original_stock - 5
 
