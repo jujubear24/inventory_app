@@ -3,6 +3,7 @@ from app.models.db import db
 import os
 from app.utils import get_app_config
 from config import get_config
+from flask_login import LoginManager
 
 
 def create_app(config_name=None):
@@ -36,11 +37,28 @@ def create_app(config_name=None):
             db.create_all()
         print("Initialized the database.")
     
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message_category = 'info'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        from app.models.user import User
+        return User.query.get(int(user_id))
+
+
+    
     # Register blueprints
-    from app.routes import main_bp, products_bp, reports_bp
+    from app.routes import main_bp, products_bp, reports_bp, auth_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(auth_bp)
+    
+
+
     
     # Create instance folder
     try:
