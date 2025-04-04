@@ -29,3 +29,14 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('Email already registered. Please use a different one.')
 
+
+class ProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    first_name = StringField('First Name', validators=[Length(max=64)])
+    last_name = StringField('Last Name', validators=[Length(max=64)])
+    current_password = PasswordField('Current Password')
+    new_password = PasswordField('New Password', validators=[Optional(), Length(min=8)])
+    confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password')])
+    submit = SubmitField('Save Changes')
+

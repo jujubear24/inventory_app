@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User
 from app.models.db import db
-from app.forms.auth import LoginForm, RegistrationForm
+from app.forms.auth import LoginForm, RegistrationForm, ProfileForm
 from typing import Union, Optional
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -50,3 +50,41 @@ def register() -> Union[str, redirect]:
     
     return render_template('auth/register.html', form=form)
 
+
+@auth_bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    form = ProfileForm(obj=current_user)
+    if form.validate_on_submit():
+        # Check if username or email is being changed
+        if form.username.data != current_user.username and User.query.filter_by(username=form.username.data).first():
+            form.username.errors.append('Username already taken')
+            return render_template('auth/profile.html', form=form)
+        
+        if form.email.data != current_user.email and User.query.filter_by(email=form.email.data).first():
+            form.email.errors.append('Email already registered')
+            return render_template('auth/profile.html', form=form)
+        
+        # Check current password if attempting to change password
+        if form.new_password.data:
+            if not form.current_password.data:
+                form.current_password.errors.append('Current password is required to set a new password')
+                return render_template('auth/profile.html', form=form)
+            
+            if not current_user.check_password(form.current_password.data):
+                form.current_password.errors.append('Incorrect password')
+                return render_template('auth/profile.html', form=form)
+            
+            current_user.set_password(form.new_password.data)
+        
+        # Update user information
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        
+        db.session.commit()
+        flash('Your profile has been updated successfully!', 'success')
+        return redirect(url_for('auth.profile'))
+    
+    return render_template('auth/profile.html', form=form)
