@@ -16,19 +16,37 @@
                 <div class="text-2xl font-bold">StockTrack</div>
             </div>
 
+            <!-- User info section - only show if logged in -->
+            {% if current_user.is_authenticated %}
+            <div class="p-4 mb-2 border-b border-purple-800/30">
+                <div class="flex items-center">
+                    <div
+                        class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center font-bold text-lg">
+                        {{ current_user.username[0].upper() }}
+                    </div>
+                    <div class="ml-3">
+                        <div class="font-medium">{{ current_user.full_name }}</div>
+                        <div class="text-xs text-purple-300">
+                            {% if current_user.is_admin %}Admin{% else %}User{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Navigation sections -->
             <div class="p-4">
                 <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-4">Main</div>
                 <nav class="space-y-1">
-                    <a href="{{ url_for('main.product_list') }}"
-                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('routes.product_list') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Dashboard
                     </a>
-                    <a href="{{ url_for('main.inventory_status') }}"
+                    <a href="{{ url_for('routes.inventory_status') }}"
                         class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Inventory Status
                     </a>
-                    <a href="{{ url_for('products.add_product') }}"
+                    <a href="{{ url_for('routes.add_product') }}"
                         class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Add Product
                     </a>
@@ -36,19 +54,68 @@
 
                 <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-6">Reports</div>
                 <nav class="space-y-1">
-                    <!-- Removed stock_level_report from navigation -->
-                    <a href="{{ url_for('reports.low_stock_report') }}"
+                    <a href="{{ url_for('routes.low_stock_report') }}"
                         class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Low Stock Report
                     </a>
-                    <a href="{{ url_for('reports.product_summary_report') }}"
-                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('routes.product_summary_report') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Product Summary
                     </a>
-                    <a href="{{ url_for('reports.product_value_report') }}"
-                        class=" py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                    <a href="{{ url_for('routes.product_value_report') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
                         Product Value
                     </a>
+                </nav>
+
+                <!-- Admin section - only visible to admin users -->
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-6">Administration
+                </div>
+                <nav class="space-y-1">
+                    <a href="{{ url_for('admin.user_list') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        User Management
+                    </a>
+                </nav>
+                {% endif %}
+
+                <!-- Authentication links -->
+                <div class="text-xs font-semibold uppercase tracking-wider text-purple-300 mb-3 mt-6">Account</div>
+                <nav class="space-y-1">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.logout') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                        Logout
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                        Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}"
+                        class="py-2.5 px-4 rounded-lg hover:bg-white/10 transition-colors flex items-center text-white">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                            </path>
+                        </svg>
+                        Register
+                    </a>
+                    {% endif %}
                 </nav>
             </div>
         </aside>
@@ -63,4 +130,5 @@
 </body>
 
 </html>
+
 
