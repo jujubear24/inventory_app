@@ -4,6 +4,14 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationE
 from app.models.user import User
 from typing import Optional
 
+def optional_length(min=None, max=None):
+    def _optional_length(form, field):
+        if field.data and len(field.data) < min:
+            raise ValidationError(f'Field must be at least {min} characters long if provided.')
+        elif field.data and max and len(field.data) > max:
+            raise ValidationError(f'Field cannot be longer than {max} characters.')
+    return _optional_length
+
 class LoginForm(FlaskForm):
     username: StringField = StringField('Username', validators=[DataRequired()])
     password: PasswordField = PasswordField('Password', validators=[DataRequired()])
@@ -36,7 +44,7 @@ class ProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[Length(max=64)])
     last_name = StringField('Last Name', validators=[Length(max=64)])
     current_password = PasswordField('Current Password')
-    new_password = PasswordField('New Password', validators=[Optional(), Length(min=8)])
+    new_password = PasswordField('New Password', validators=[optional_length(min=8)])
     confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password')])
     submit = SubmitField('Save Changes')
 
