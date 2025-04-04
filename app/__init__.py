@@ -51,12 +51,15 @@ def create_app(config_name=None):
 
     
     # Register blueprints
-    from app.routes import main_bp, products_bp, reports_bp, auth_bp
+    from app.routes import main_bp, products_bp, reports_bp
+    from app.routes.auth import auth_bp
+    from app.routes.admin import admin_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(auth_bp)
-    
+    app.register_blueprint(admin_bp)
+
 
 
     
