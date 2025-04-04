@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from app.models.db import db 
 import os
 from app.utils import get_app_config
@@ -59,6 +59,22 @@ def create_app(config_name=None):
     app.register_blueprint(reports_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
+
+    # Register error handlers
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()  # Rollback any failed database sessions
+        return render_template('errors/500.html'), 500
+    
+
 
 
 
