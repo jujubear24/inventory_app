@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask_migrate import Migrate
 from app.models.db import db 
 import os
 from app.utils import get_app_config
@@ -28,6 +29,7 @@ def create_app(config_name=None):
     
     # Initialize db with the app
     db.init_app(app)
+    Migrate(app, db)
 
     # Register CLI command for database initialization
     @app.cli.command("init-db")

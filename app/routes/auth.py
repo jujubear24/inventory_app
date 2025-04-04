@@ -12,7 +12,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def login():
     """Handle user login."""
     if current_user.is_authenticated:
-        return redirect(url_for('routes.product_list'))
+        return redirect(url_for('main.product_list'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -27,7 +27,7 @@ def login():
             db.session.commit()
             
             # Redirect to the dashboard
-            return redirect(url_for('routes.product_list'))
+            return redirect(url_for('main.product_list'))
         
         # Invalid login attempt
         flash('Invalid username or password', 'danger')
@@ -39,12 +39,12 @@ def login():
 @login_required
 def logout() -> redirect:
     logout_user()
-    return redirect(url_for('main.index'))
+    return redirect(url_for('main.product_list'))
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register() -> Union[str, redirect]:
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.product_list'))
     
     form: RegistrationForm = RegistrationForm()
     if form.validate_on_submit():
