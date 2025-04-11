@@ -16,7 +16,7 @@ def admin_required(f: F) -> F:
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
         if not current_user.is_authenticated or not current_user.is_admin:
             flash('You need to be an admin to access this page.', 'danger')
-            return redirect(url_for('main.index'))
+            return redirect(url_for('main.product_list'))
         return f(*args, **kwargs)
     return cast(F, decorated_function)
 
