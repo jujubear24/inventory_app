@@ -1,119 +1,166 @@
-# app/routes/products.py
-from flask import Blueprint, render_template, request, redirect, url_for, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
 from app.models import db, Product
-from app.utils import validate_product_data, generate_sku
-from typing import  Union
+from app.forms.product import ProductForm, ConfirmDeleteForm
+from app.utils import generate_sku
+from typing import Union
 
+# Initialize Product Blueprint
 products_bp = Blueprint("products", __name__, url_prefix="/products")
 
+# Route: Add Product
 @products_bp.route("/add", methods=["GET", "POST"])
 def add_product() -> Union[str, Response]:
-    if request.method == "POST":
-        # Collect form data into a dictionary
-        product_data = {
-            "name": request.form.get("name", ""),
-            "sku": request.form.get("sku", ""),
-            "description": request.form.get("description", ""),
-            "price": request.form.get("price", "0"),
-            "stock_level": request.form.get("stock_level", ""),
-            "low_stock_threshold": request.form.get("low_stock_threshold", "")
-        }
+    form = ProductForm()
+    form.submit.label.text = 'Add Product' # Customize button label
 
-        # Generate SKU if not provided
-        if not product_data["sku"]:
-            product_data["sku"] = generate_sku(product_data["name"])
+    if form.validate_on_submit():
+        # Check if SKU is unique if provided, or generate if not
+        sku = form.sku.data
+        if not sku:
+            sku = generate_sku(form.name.data)
+        elif Product.query.filter_by(sku=sku).first():
+            form.sku.errors.append("SKU already exists. Leave blank to auto-generate.")
+            # Rerender form with error
+            return render_template("products/add.html", form=form, title="Add New Product")
 
-        # Validate data
-        errors = validate_product_data(product_data)
-        
-        if errors:
-            return render_template("products/add.html", errors=errors)
-
-        # Convert to appropriate types after validation
-        new_product: Product = Product(
-            name=product_data["name"], 
-            sku=product_data["sku"], 
-            description=product_data["description"], 
-            price=float(product_data["price"]), 
-            stock_level=int(product_data["stock_level"]), 
-            low_stock_threshold=int(product_data["low_stock_threshold"])
+        new_product = Product(
+            name=form.name.data,
+            sku=sku,
+            description=form.description.data,
+            price=form.price.data, # WTForms handles float conversion
+            stock_level=form.stock_level.data, # WTForms handles int conversion
+            low_stock_threshold=form.low_stock_threshold.data
         )
-        db.session.add(new_product)
-        db.session.commit()
-        return redirect(url_for("main.product_list"))
-    return render_template("products/add.html")
+        try:
+            db.session.add(new_product)
+            db.session.commit()
+            flash(f'Product "{new_product.name}" added successfully!', 'success')
+            return redirect(url_for("main.product_list"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding product: {str(e)}', 'danger')
 
+    # For GET request or validation failure
+    return render_template("products/add.html", form=form, title="Add New Product")
+
+
+# Route: Edit product
 @products_bp.route("/edit/<int:product_id>", methods=["GET", "POST"])
 def edit_product(product_id: int) -> Union[str, Response]:
-    product: Product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id) 
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('main.product_list'))
 
-    if request.method == "POST":
-        # Collect form data into a dictionary
-        product_data = {
-            "name": request.form.get("name", ""),
-            "sku": request.form.get("sku", ""),
-            "description": request.form.get("description", ""),
-            "price": request.form.get("price", ""),
-            "stock_level": request.form.get("stock_level", ""),
-            "low_stock_threshold": request.form.get("low_stock_threshold", "")
-        }
+    # Pre-populate form with product data on GET
+    form = ProductForm(obj=product)
+    form.submit.label.text = 'Update Product' # Customize button label
 
-        # Validate data
-        errors = validate_product_data(product_data)
-        
-        if errors:
-            return render_template("products/edit.html", product=product, errors=errors)
+    if form.validate_on_submit():
+        # Check if SKU is being changed and if the new one conflicts
+        new_sku = form.sku.data
+        if new_sku != product.sku and Product.query.filter(Product.id != product_id, Product.sku == new_sku).first():
+             form.sku.errors.append("This SKU is already used by another product.")
+             # Rerender form with error
+             return render_template("products/edit.html", form=form, title=f"Edit Product: {product.name}", product_id=product_id)
+        else:
+            # Populate object attributes from form data
+            form.populate_obj(product)
+            try:
+                db.session.commit()
+                flash(f'Product "{product.name}" updated successfully!', 'success')
+                return redirect(url_for("main.product_list"))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating product: {str(e)}', 'danger')
 
-        # Update product with validated data
-        product.name = product_data["name"]
-        product.sku = product_data["sku"]
-        product.description = product_data["description"]
-        product.price = float(product_data["price"])
-        product.stock_level = int(product_data["stock_level"])
-        product.low_stock_threshold = int(product_data["low_stock_threshold"])
+    # For GET request or validation failure
+    return render_template("products/edit.html", form=form, title=f"Edit Product: {product.name}", product_id=product_id) # Pass product_id for potential actions
 
-        db.session.commit()
+# Route: Delete product
+@products_bp.route("/delete/<int:product_id>", methods=["GET", "POST"]) 
+def delete_product(product_id: int) -> Union[str, Response]:
+    product = db.session.get(Product, product_id)
+    if not product:
+        flash('Product not found.', 'danger')
         return redirect(url_for("main.product_list"))
-    
-    return render_template("products/edit.html", product=product)
 
-@products_bp.route("/delete/<int:product_id>")
-def delete_product(product_id: int) -> Response:
-    product: Product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    return redirect(url_for("main.product_list"))
+    form = ConfirmDeleteForm() # Instantiate the confirmation form
 
+    if form.validate_on_submit():
+      
+        try:
+            product_name = product.name # Store name before deleting
+            db.session.delete(product)
+            db.session.commit()
+            flash(f'Product "{product_name}" deleted successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting product: {str(e)}', 'danger')
+        return redirect(url_for("main.product_list"))
+
+    # GET request - Show confirmation page
+    return render_template("products/delete_confirm.html",
+                           product=product,
+                           form=form,
+                           title=f"Confirm Deletion: {product.name}")
+
+
+# Route: Stock-in
 @products_bp.route("/stock/in/<int:product_id>", methods=["GET", "POST"])
 def stock_in(product_id: int) -> Union[str, Response]:
-    product: Product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id)
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('main.product_list'))
+
     if request.method == "POST":
         try:
             quantity: int = int(request.form["quantity"])
             if quantity > 0:
                 product.stock_level += quantity
                 db.session.commit()
+                flash(f'{quantity} units added to stock for "{product.name}".', 'success')
+            else:
+                flash('Please enter a positive quantity.', 'warning')
         except (ValueError, KeyError):
-            # Handle invalid input gracefully
-            pass
+            flash('Invalid quantity entered.', 'danger')
+        except Exception as e:
+             db.session.rollback()
+             flash(f'Error updating stock: {str(e)}', 'danger')
+        # Redirect to list or back to stock_in page? Redirecting to list for now.
         return redirect(url_for("main.product_list"))
+
     return render_template("products/stock_in.html", product=product)
 
+# Route: Stock-out
 @products_bp.route("/stock/out/<int:product_id>", methods=["GET", "POST"])
 def stock_out(product_id: int) -> Union[str, Response]:
-    product: Product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id)
+    if not product:
+        flash('Product not found.', 'danger')
+        return redirect(url_for('main.product_list'))
+
     if request.method == "POST":
         try:
             quantity: int = int(request.form["quantity"])
-            if quantity > 0 and product.stock_level >= quantity:
+            if quantity <= 0:
+                 flash('Please enter a positive quantity.', 'warning')
+            elif product.stock_level >= quantity:
                 product.stock_level -= quantity
                 db.session.commit()
+                flash(f'{quantity} units removed from stock for "{product.name}".', 'success')
+            else:
+                flash(f'Cannot remove {quantity} units. Only {product.stock_level} in stock.', 'warning')
         except (ValueError, KeyError):
-            # Handle invalid input gracefully
-            pass
+            flash('Invalid quantity entered.', 'danger')
+        except Exception as e:
+             db.session.rollback()
+             flash(f'Error updating stock: {str(e)}', 'danger')
+        # Redirect to list or back to stock_out page? Redirecting to list for now.
         return redirect(url_for("main.product_list"))
-    return render_template("products/stock_out.html", product=product)
 
+    return render_template("products/stock_out.html", product=product)
 
 
 
