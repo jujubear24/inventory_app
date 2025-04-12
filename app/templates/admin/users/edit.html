@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 
+<!-- Imports -->
+{% from "_form_helpers.html" import render_field %}
+
 {% block title %}Edit User{% endblock %}
 
 {% block content %}
@@ -13,99 +16,38 @@
 
 <div class="bg-white shadow-md rounded-lg overflow-hidden">
     <div class="p-6">
-        <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}" class="space-y-6">
+        <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id), _external=False }}" class="space-y-3" novalidate>
             {{ form.hidden_tag() }}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    {{ form.username.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.username(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    {% if form.username.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.username.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
 
+                <div>{{ render_field(form.username) }}</div>
+                <div>{{ render_field(form.email) }}</div>
+                <div>{{ render_field(form.first_name) }}</div>
+                <div>{{ render_field(form.last_name) }}</div>
                 <div>
-                    {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.email(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none
-                    focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    {% if form.email.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.email.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    {{ render_field(form.password) }}
+                    <p class="text-xs text-gray-500 -mt-3 mb-3">Leave blank to keep current password.</p> 
                 </div>
+                <div>{{ render_field(form.password2, label_text='Confirm Password') }}</div>
 
-                <div>
-                    {{ form.first_name.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.first_name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    {% if form.first_name.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.first_name.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div>
-                    {{ form.last_name.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.last_name(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    {% if form.last_name.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.last_name.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div>
-                    {{ form.password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    <p class="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>
-                    {% if form.password.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.password.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div>
-                    {{ form.password2.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                    {{ form.password2(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent") }}
-                    {% if form.password2.errors %}
-                    <div class="text-red-500 text-sm mt-1">
-                        {% for error in form.password2.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="md:col-span-2">
+                <!-- Boolean Field -->
+                <div class="md:col-span-2 mt-2">
                     <div class="flex items-center">
-                        {{ form.is_admin(class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded")
-                        }}
+                        {{ form.is_admin(class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded")}}
                         {{ form.is_admin.label(class="ml-2 block text-sm text-gray-700") }}
                     </div>
+
+                    {% if form.is_admin.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.is_admin.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex justify-end pt-4">
                 {{ form.submit(class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium
                 rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2
                 focus:ring-offset-2 focus:ring-purple-500") }}
