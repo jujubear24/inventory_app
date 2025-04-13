@@ -1,5 +1,6 @@
 from app.models.db import db
 from typing import Any
+from sqlalchemy.types import NUMERIC
 
 class Product(db.Model):
     __tablename__: str = 'product'
@@ -8,7 +9,7 @@ class Product(db.Model):
     name: Any = db.Column(db.String(100), nullable=False)
     sku: Any = db.Column(db.String(50), unique=True, nullable=False)
     description: Any = db.Column(db.Text)
-    price: Any = db.Column(db.Float, nullable=False)
+    price: Any = db.Column(NUMERIC(precision=10, scale=2), nullable=False)
     stock_level: Any = db.Column(db.Integer, default=0, nullable=False)
     low_stock_threshold: Any = db.Column(db.Integer, default=10, nullable=False)
     

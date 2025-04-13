@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, FloatField, IntegerField, SubmitField
+from wtforms import StringField, TextAreaField, DecimalField, IntegerField, SubmitField
+from decimal import ROUND_HALF_UP
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 # Form: Product
@@ -16,9 +17,11 @@ class ProductForm(FlaskForm):
         'Description',
         validators=[Optional()]
     )
-    price = FloatField(
+    price = DecimalField(
         'Price ($)',
-        validators=[DataRequired(), NumberRange(min=0)]
+        validators=[DataRequired(), NumberRange(min=0)],
+        places=2,
+        rounding=ROUND_HALF_UP
     )
     stock_level = IntegerField(
         'Stock Level',
