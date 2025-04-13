@@ -3,6 +3,7 @@ from app.models import db, Product
 from app.forms.product import ProductForm, ConfirmDeleteForm
 from app.utils import generate_sku
 from typing import Union
+from sqlalchemy.exc import IntegrityError
 
 # Initialize Product Blueprint
 products_bp = Blueprint("products", __name__, url_prefix="/products")
@@ -11,20 +12,22 @@ products_bp = Blueprint("products", __name__, url_prefix="/products")
 @products_bp.route("/add", methods=["GET", "POST"])
 def add_product() -> Union[str, Response]:
     form = ProductForm()
-    form.submit.label.text = 'Add Product' # Customize button label
+    form.submit.label.text = 'Add Product'
 
     if form.validate_on_submit():
-        # Check if SKU is unique if provided, or generate if not
+    
         sku = form.sku.data
+        new_product_name = form.name.data
+
+
         if not sku:
-            sku = generate_sku(form.name.data)
+            sku = generate_sku(new_product_name)
         elif Product.query.filter_by(sku=sku).first():
-            form.sku.errors.append("SKU already exists. Leave blank to auto-generate.")
-            # Rerender form with error
+            form.sku.errors.append("SKU already exists. Leave blank to auto-generate or enter a unique one.")
             return render_template("products/add.html", form=form, title="Add New Product")
 
         new_product = Product(
-            name=form.name.data,
+            name=new_product_name,
             sku=sku,
             description=form.description.data,
             price=form.price.data, # WTForms handles float conversion
@@ -36,11 +39,22 @@ def add_product() -> Union[str, Response]:
             db.session.commit()
             flash(f'Product "{new_product.name}" added successfully!', 'success')
             return redirect(url_for("main.product_list"))
+        
+        except IntegrityError as e:
+            db.session.rollback()
+            error_info = str(e.orig).lower()
+
+            if 'unique constraint' in error_info and 'product.sku' in error_info:
+                 flash(f'Error adding product: The generated or provided SKU \'{sku}\' already exists. Please try adding again or use a different manual SKU.', 'danger')
+                 form.sku.data = '' # Clear potentially problematic auto-generated SKU
+            else:
+                flash(f'Database error adding product: {str(e)}', 'danger')
+
+        # Catch other potential exceptions during commit
         except Exception as e:
             db.session.rollback()
-            flash(f'Error adding product: {str(e)}', 'danger')
-
-    # For GET request or validation failure
+            flash(f'An unexpected error occurred: {str(e)}', 'danger')
+    
     return render_template("products/add.html", form=form, title="Add New Product")
 
 
