@@ -1,4 +1,5 @@
-{% macro render_field(field, extra_classes='', placeholder='', type=None, **kwargs) %}
+<!-- Macro Signature -->
+{% macro render_field(field, extra_classes='', placeholder='', type=None) %}
 {# Renders a WTForms field with label, input, and errors. #}
 {# Applies Tailwind classes, including error styling. #}
 {# Args: #}
@@ -6,7 +7,7 @@
 {# extra_classes: Optional string of additional CSS classes for the input #}
 {# placeholder: Optional placeholder text for the input #}
 {# type: Optional override for input type (e.g., 'password') #}
-{# **kwargs: Additional HTML attributes for the input field #}
+
 
 <div class="mb-4"> {# Add margin below each field group #}
     {{ field.label(class="block text-sm font-medium text-gray-700 mb-1") }}
@@ -27,17 +28,20 @@
 
     {# Render the field #}
     {% if field.type == 'TextAreaField' %}
-    {{ field(class=final_classes, placeholder=placeholder if placeholder else field.label.text, **kwargs) }}
+    {{ field(class=final_classes, placeholder=placeholder if placeholder else field.label.text, rows=kwargs.get('rows', 3)) }}
+    
     {% elif field.type == 'BooleanField' %}
+
+
     <div class="flex items-center">
         {{ field(class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" + extra_classes +
-        (error_classes if field.errors else ''), **kwargs) }}
+        (error_classes if field.errors else '')) }}
         {# BooleanField label is often rendered differently, handle outside or adjust macro #}
         {# Example: Render label manually after calling macro in template #}
     </div>
     {% else %}
     {{ field(type=field_type, class=final_classes, placeholder=placeholder if placeholder else field.label.text,
-    **kwargs) }}
+    step=kwargs.get('step')) }}
     {% endif %}
 
     {# Display hint/description if provided #}
