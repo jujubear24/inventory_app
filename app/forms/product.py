@@ -11,7 +11,7 @@ class ProductForm(FlaskForm):
     )
     sku = StringField(
         'SKU',
-        validators=[DataRequired(), Length(max=50)]
+        validators=[Optional(), Length(max=50)]
     )
     description = TextAreaField(
         'Description',
