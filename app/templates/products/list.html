@@ -51,15 +51,12 @@
                 </svg>
             </div>
         </div>
-        <div class="mt-4 text-3xl font-bold">{{ products|length }}</div>
+        <div class="mt-4 text-3xl font-bold">{{ stats.total_products }}</div>
         <div class="mt-1 text-gray-500 text-xs">In your inventory</div>
     </div>
 
     <!-- Low Stock Card -->
-    {% set low_stock_count = 0 %}
-    {% for product in products %}
-    {% if product.stock_level <= product.low_stock_threshold %} {% set low_stock_count=low_stock_count + 1 %} {% endif
-        %} {% endfor %} <div
+    <div
         class="bg-white rounded-lg shadow p-6 transform hover:-translate-y-1 transition-all duration-200">
         <div class="flex justify-between items-start">
             <div class="text-gray-500 text-sm">Low Stock Items</div>
@@ -72,15 +69,11 @@
                 </svg>
             </div>
         </div>
-        <div class="mt-4 text-3xl font-bold">{{ low_stock_count }}</div>
+        <div class="mt-4 text-3xl font-bold">{{ stats.low_stock_count }}</div>
         <div class="mt-1 text-gray-500 text-xs">Need attention</div>
 </div>
 
 <!-- Total Value Card -->
-{% set total_value = 0 %}
-{% for product in products %}
-{% set total_value = total_value + (product.price * product.stock_level) %}
-{% endfor %}
 
 <div class="bg-white rounded-lg shadow p-6 transform hover:-translate-y-1 transition-all duration-200">
     <div class="flex justify-between items-start">
@@ -94,7 +87,7 @@
             </svg>
         </div>
     </div>
-    <div class="mt-4 text-3xl font-bold">${{ "%.2f"|format(total_value) }}</div>
+    <div class="mt-4 text-3xl font-bold">${{ "%.2f"|format(stats.total_value) }}</div>
     <div class="mt-1 text-gray-500 text-xs">Total inventory worth</div>
 </div>
 
@@ -122,14 +115,6 @@
 </div>
 {% else %}
 <!-- Average Stock Card (for non-authenticated users) -->
-{% set avg_stock = 0 %}
-{% if products|length > 0 %}
-{% set total_stock = 0 %}
-{% for product in products %}
-{% set total_stock = total_stock + product.stock_level %}
-{% endfor %}
-{% set avg_stock = (total_stock / products|length)|round(1) %}
-{% endif %}
 
 <div class="bg-white rounded-lg shadow p-6 transform hover:-translate-y-1 transition-all duration-200">
     <div class="flex justify-between items-start">
@@ -143,7 +128,7 @@
             </svg>
         </div>
     </div>
-    <div class="mt-4 text-3xl font-bold">{{ avg_stock }}</div>
+    <div class="mt-4 text-3xl font-bold">{{ stats.avg_stock }}</div>
     <div class="mt-1 text-gray-500 text-xs">Units per product</div>
 </div>
 {% endif %}
@@ -162,7 +147,7 @@
         </div>
         <div class="ml-3 flex-1">
             <div class="flex justify-between items-center">
-                <h3 class="text-sm font-medium text-amber-800">Low Stock Alerts ({{ low_stock_count }})</h3>
+                <h3 class="text-sm font-medium text-amber-800">Low Stock Alerts ({{ stats.low_stock_count }})</h3>
                 <a href="{{ url_for('routes.inventory_status') }}"
                     class="text-xs text-amber-600 hover:text-amber-800 font-medium">View Inventory Status →</a>
             </div>

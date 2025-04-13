@@ -25,14 +25,11 @@
                 </svg>
             </div>
         </div>
-        <div class="mt-4 text-3xl font-bold">{{ products|length }}</div>
+        <div class="mt-4 text-3xl font-bold">{{ stats.total_products }}</div>
     </div>
 
     <!-- Low Stock Products -->
-    {% set low_stock_count = 0 %}
-    {% for product in products %}
-    {% if product.stock_level <= product.low_stock_threshold %} {% set low_stock_count=low_stock_count + 1 %} {% endif
-        %} {% endfor %} <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-start">
             <div class="text-gray-500 text-sm">Low Stock Items</div>
             <div class="bg-amber-100 p-2 rounded-md text-amber-600">
@@ -44,13 +41,11 @@
                 </svg>
             </div>
         </div>
-        <div class="mt-4 text-3xl font-bold">{{ low_stock_count }}</div>
+        <div class="mt-4 text-3xl font-bold">{{ stats.low_stock_count }}</div>
 </div>
 
 <!-- Out of Stock Products -->
-{% set out_of_stock_count = 0 %}
-{% for product in products %}
-{% if product.stock_level <= 0 %} {% set out_of_stock_count=out_of_stock_count + 1 %} {% endif %} {% endfor %} <div
+<div
     class="bg-white rounded-lg shadow p-6">
     <div class="flex justify-between items-start">
         <div class="text-gray-500 text-sm">Out of Stock</div>
@@ -61,11 +56,11 @@
             </svg>
         </div>
     </div>
-    <div class="mt-4 text-3xl font-bold">{{ out_of_stock_count }}</div>
+    <div class="mt-4 text-3xl font-bold">{{ stats.out_of_stock_count }}</div>
     </div>
     </div>
 
-    {% if low_stock_count > 0 %}
+    {% if stats.low_stock_count > 0 %}
     <div class="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md">
         <div class="flex">
             <div class="flex-shrink-0 text-amber-500">
@@ -79,7 +74,7 @@
             <div class="ml-3">
                 <h3 class="text-sm font-medium text-amber-800">Low Stock Alert</h3>
                 <div class="mt-2 text-sm text-amber-700">
-                    <p>{{ low_stock_count }} products are at or below their low stock threshold. Consider restocking
+                    <p>{{ stats.low_stock_count }} products are at or below their low stock threshold. Consider restocking
                         these items.</p>
                 </div>
             </div>
@@ -251,4 +246,5 @@
         });
     </script>
     {% endblock %}
+
 

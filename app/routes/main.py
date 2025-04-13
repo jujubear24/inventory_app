@@ -16,6 +16,7 @@ def product_list() -> str:
 @main_bp.route("/inventory_status")
 def inventory_status() -> str:
     products: List[Product] = Product.query.all()
-    return render_template("inventory_status.html", products=products)
+    stats = calculate_inventory_stats(products)
+    return render_template("inventory_status.html", products=products, stats=stats)
 
 
