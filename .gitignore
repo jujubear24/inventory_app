@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 scripts/__pycache__/
 app/static/css/output.css
+
+# Environment variables
+.env
+
