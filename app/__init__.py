@@ -1,5 +1,4 @@
 # os and Dotenv Loading
-import os
 from dotenv import load_dotenv
 
 
@@ -128,7 +127,7 @@ def create_app(config_name=None):
 
     # --- OAuth Authorized Signal Handler ---
     if google_keys_set and 'google' in app.blueprints:
-        @oauth_authorized.connect_via(app.blueprints['google']) # Connect to the google blueprint if it was created
+        @oauth_authorized.connect_via(app.blueprints['google']) 
         def google_logged_in(blueprint, token):
             if not token:
                 flash("Failed to log in with Google.", category="error")
@@ -157,6 +156,8 @@ def create_app(config_name=None):
                 oauth_entry = OAuth.query.filter_by(
                     provider=blueprint.name, provider_user_id=google_user_id
                 ).one_or_none() # Use one_or_none for clarity
+
+               
 
                 if oauth_entry:
                     # OAuth connection exists, log in the associated user

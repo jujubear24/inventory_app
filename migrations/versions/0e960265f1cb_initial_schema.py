@@ -1,8 +1,8 @@
-"""Complete reset migration post cache clear
+"""Initial schema
 
-Revision ID: 8ab0cbb4f965
+Revision ID: 0e960265f1cb
 Revises: 
-Create Date: 2025-04-20 20:27:31.860745
+Create Date: 2025-04-21 11:21:23.457063
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8ab0cbb4f965'
+revision = '0e960265f1cb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -50,11 +50,12 @@ def upgrade():
         batch_op.create_index(batch_op.f('ix_user_username'), ['username'], unique=True)
 
     op.create_table('flask_dance_oauth',
-    sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('provider', sa.String(length=50), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('provider_user_id', sa.String(length=256), nullable=True),
     sa.Column('token', sa.JSON(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
