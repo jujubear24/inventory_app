@@ -8,3 +8,14 @@ app/static/css/output.css
 # Environment variables
 .env
 
+# DB files
+inventory.db
+*.sqlite3
+*.db
+*.db-journal
+
+# VS Code
+.vscode/
+.vscode-test/
+
+get-pip.py

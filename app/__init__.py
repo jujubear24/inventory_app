@@ -2,30 +2,27 @@
 import os
 from dotenv import load_dotenv
 
+
 # Flask and related
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, flash  
+
 
 # Extensions
-from flask_migrate import Migrate
-from flask_login import LoginManager, current_user, login_user
-from flask_dance.contrib.google import make_google_blueprint
-from flask_dance.consumer import oauth_authorized
-from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
+from flask_migrate import Migrate  
+from flask_login import LoginManager, current_user, login_user  
+from flask_dance.contrib.google import make_google_blueprint  
+from flask_dance.consumer import oauth_authorized  
+from flask_dance.consumer.storage.sqla import SQLAlchemyStorage  
 
 # Local App Components (Config, DB, Models)
-from config import get_config
-from app.models.db import db 
-from app.models.user import User
-from app.utils import get_app_config
-from app.models.oauth import OAuth 
-
-# Other necessary Imports
-from sqlalchemy.orm.exc import NoResultFound 
-
+from config import get_config  
+from app.models.db import db  
+from app.models.user import User 
+from app.utils import get_app_config 
+from app.models.oauth import OAuth  
 
 
 load_dotenv()
-
 
 # App factory to create Flask app instances
 def create_app(config_name=None):
@@ -36,6 +33,7 @@ def create_app(config_name=None):
      # Load configuration from config object based on FLASK_ENV
     selected_config = get_config(config_name)
     app.config.from_object(selected_config)
+    print(f"--- FLASK DEBUG: Loaded SQLALCHEMY_DATABASE_URI = {app.config.get('SQLALCHEMY_DATABASE_URI')} ---")
     app.config.update(get_app_config())
 
    
@@ -123,10 +121,10 @@ def create_app(config_name=None):
         return render_template('errors/500.html'), 500
     
     # Create instance folder
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    # try:
+    #     os.makedirs(app.instance_path)
+    # except OSError:
+    #     pass
 
     # --- OAuth Authorized Signal Handler ---
     if google_keys_set and 'google' in app.blueprints:
