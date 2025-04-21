@@ -180,7 +180,10 @@ def create_app(config_name=None):
                         flash("Successfully signed in with Google and linked account.", category="success")
                     else:
                         # No user with this email, create a new user
-                        new_user = User(email=email, username=email.split('@')[0])
+                        new_user = User(email=email, username=email.split('@')[0],
+                                    first_name=google_info.get("given_name"),
+                                    last_name=google_info.get("family_name")
+                                )
                         oauth_entry = OAuth(provider=blueprint.name, provider_user_id=google_user_id, token=token, user=new_user)
                         db.session.add_all([new_user, oauth_entry])
                         db.session.commit()
