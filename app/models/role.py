@@ -1,5 +1,4 @@
 from .db import db
-from typing import List
 from sqlalchemy import Table, Column, Integer, ForeignKey
 
 
