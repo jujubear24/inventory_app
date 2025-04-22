@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional, List, Tuple, cast
+from flask import current_app
 from app.models.db import db
 from app.models.user import User
 
@@ -6,7 +7,7 @@ class UserService:
     @staticmethod
     def get_all_users() -> List[User]:
         """Get all users."""
-        return User.query.all()
+        return User.query.order_by(User.username).all()
     
     @staticmethod
     def get_user_by_id(user_id: int) -> Optional[User]:
@@ -15,8 +16,8 @@ class UserService:
     
     @staticmethod
     def create_user(user_data: Dict[str, Any]) -> Tuple[Optional[User], Dict[str, str]]:
-        """Create a new user with validation."""
-        errors: Dict[str, str] = UserService.validate_user_data(user_data)
+        """Create a new user with validation and role assignment"""
+        errors: Dict[str, str] = UserService.validate_user_data(user_data, is_new=True)
         if errors:
             return None, errors
         
@@ -25,84 +26,114 @@ class UserService:
             email=user_data.get('email', ''),
             first_name=user_data.get('first_name', ''),
             last_name=user_data.get('last_name', ''),
-            is_admin=user_data.get('is_admin', False)
         )
         user.set_password(cast(str, user_data.get('password', '')))
-        
-        db.session.add(user)
-        db.session.commit()
-        return user, {}
+
+        # --- Assign Roles ---
+        selected_roles = user_data.get('roles', [])
+        user.roles =selected_roles
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+            return user, {}
+        except Exception as e:
+            db.session.rollback()
+            return None, {'database': f'Error saving user: {str(e)}'}
     
     @staticmethod
     def update_user(user_id: int, user_data: Dict[str, Any]) -> Tuple[Optional[User], Dict[str, str]]:
-        """Update a user."""
+        """Update a user, including roles"""
         user: Optional[User] = db.session.get(User, user_id)
         if not user:
             return None, {'error': 'User not found'}
         
-        errors: Dict[str, str] = {}
-        
-        if 'username' in user_data and user_data['username'] != user.username:
-            username_exists: Optional[User] = User.query.filter_by(username=user_data['username']).first()
-            if username_exists:
-                errors['username'] = 'Username already taken'
-            else:
-                user.username = cast(str, user_data['username'])
-        
-        if 'email' in user_data and user_data['email'] != user.email:
-            email_exists: Optional[User] = User.query.filter_by(email=user_data['email']).first()
-            if email_exists:
-                errors['email'] = 'Email already registered'
-            else:
-                user.email = cast(str, user_data['email'])
-        
+        errors: Dict[str, str] = UserService.validate_user_data(user_data, user_id=user_id, is_new=False)
         if errors:
             return None, errors
         
+        # Update standard fields
+        if 'username' in user_data:
+            user.username = cast(str, user_data['username'])
+        if 'email' in user_data:
+            user.email = cast(str, user_data['email'])
         if 'first_name' in user_data:
             user.first_name = cast(str, user_data['first_name'])
-        
         if 'last_name' in user_data:
             user.last_name = cast(str, user_data['last_name'])
-        
-        if 'is_admin' in user_data:
-            user.is_admin = bool(user_data['is_admin'])
-        
+
+        # Update password only if provided
         if 'password' in user_data and user_data['password']:
             user.set_password(cast(str, user_data['password']))
         
-        db.session.commit()
-        return user, {}
+        # Update roles
+        if 'roles' in user_data:
+            user.roles = user_data['roles']
+        
+        try:
+            db.session.commit()
+            return user, {}
+        except Exception as e:
+            db.session.rollback()
+            # Consider logging the exception e
+            return None, {'database': f"Error updating user: {str(e)}"}
+        
     
     @staticmethod
     def delete_user(user_id: int) -> bool:
         """Delete a user."""
         user: Optional[User] = db.session.get(User, user_id)
         if not user:
+            # current_app.logger.warning(f"Attempted to delete non-existent user with ID: {user_id}")
             return False
         
-        db.session.delete(user)
-        db.session.commit()
-        return True
+        try:
+            #  from app.models.oauth import OAuth
+            # OAuth.query.filter_by(user_id=user_id).delete()
+            # db.session.flush() # Process deletes before deleting user
+            # Need to handle related entities if necessary (e.g., OAuth entries)
+            db.session.delete(user)
+            db.session.commit()
+            current_app.logger.info(f"Successfully deleted user with ID: {user_id}") 
+            return True
+        except Exception:
+            db.session.rollback()
+            current_app.logger.error(
+                f"Error deleting user with ID: {user_id}. Session rolled back.",
+                exc_info=True # Set to True to include traceback in logs
+            )
+            return False
     
     @staticmethod
-    def validate_user_data(data: Dict[str, Any]) -> Dict[str, str]:
+    def validate_user_data(data: Dict[str, Any], user_id: Optional[int] = None, is_new: bool = True) -> Dict[str, str]:
         """Validate user data and return errors."""
         errors: Dict[str, str] = {}
-        
-        if not data.get('username'):
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+
+        if not username:
             errors['username'] = "Username is required"
-        elif User.query.filter_by(username=data['username']).first():
-            errors['username'] = "Username already taken"
+        else:
+            query = User.query.filter_by(username=username)
+            if user_id: # If updating, exclude the current user
+                query = query.filter(User.id != user_id)
+            if query.first():
+                errors['username'] = "Username already taken"
         
-        if not data.get('email'):
+        if not email:
             errors['email'] = "Email is required"
-        elif User.query.filter_by(email=data['email']).first():
-            errors['email'] = "Email already registered"
+        else:
+            # Basic email format check might be good here, but WTForms handles it too
+            query = User.query.filter_by(email=email)
+            if user_id: # If updating, exclude the current user
+                query = query.filter(User.id != user_id)
+            if query.first():
+                errors['email'] = "Email already registered"
         
-        if not data.get('password'):
+        if is_new and not password:
             errors['password'] = "Password is required"
-        elif len(str(data.get('password', ''))) < 8:
-            errors['password'] = "Password must be at least 8 characters"
+        if password and len(password) < 8:
+             errors['password'] = "Password must be at least 8 characters"
         
-        return errors
+        return errors 
