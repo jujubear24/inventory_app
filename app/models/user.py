@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from .role import Role, user_roles
 
+
 class User(db.Model, UserMixin):
     id: int = db.Column(db.Integer, primary_key=True)
     username: str = db.Column(db.String(64), unique=True, nullable=False, index=True)
@@ -54,3 +55,15 @@ class User(db.Model, UserMixin):
     def is_admin(self) -> bool:
         """Check if the user has the 'Admin' role."""
         return self.has_role('Admin')
+    
+    def has_permission(self, permission_name: str) -> bool:
+        """Check if the user has a specific permission through any of their roles."""
+        if self.is_admin:
+           return True
+       
+        for role in self.roles:
+            
+            if role.has_permission(permission_name):
+                return True
+    
+        return False
