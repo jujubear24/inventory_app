@@ -1,4 +1,12 @@
 from .db import db
+from sqlalchemy import Table, Column, Integer, ForeignKey
+
+# --- Association Table for Role
+role_permissions = Table('role_permissions', db.metadata,
+    Column('role_id', Integer, ForeignKey('role.id'), primary_key=True),
+    Column('permission_id', Integer, ForeignKey('permission.id'), primary_key=True)
+)
+
 
 class Permission(db.Model):
     __tablename__: str = 'permission'
