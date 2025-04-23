@@ -6,5 +6,4 @@ from .role import Role
 from .permission import Permission
 
 # Export all models
-__all__ = ['db', 'Product', 'User', 'OAuth', 'Role', 'Permission']
-
+__all__ = ["db", "Product", "User", "OAuth", "Role", "Permission"]

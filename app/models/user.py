@@ -58,11 +58,10 @@ class User(db.Model, UserMixin):
     
     def has_permission(self, permission_name: str) -> bool:
         """Check if the user has a specific permission through any of their roles."""
-        if self.is_admin:
+        if self.has_role('Admin'):
            return True
        
         for role in self.roles:
-            
             if role.has_permission(permission_name):
                 return True
     

@@ -3,6 +3,7 @@ from flask import current_app
 from app.models.db import db
 from app.models.user import User
 
+
 class UserService:
     @staticmethod
     def get_all_users() -> List[User]:
@@ -31,7 +32,7 @@ class UserService:
 
         # --- Assign Roles ---
         selected_roles = user_data.get('roles', [])
-        user.roles =selected_roles
+        user.roles = selected_roles
 
         try:
             db.session.add(user)
@@ -39,6 +40,7 @@ class UserService:
             return user, {}
         except Exception as e:
             db.session.rollback()
+            current_app.logger.error(f"Error saving new user: {e}", exc_info=True)
             return None, {'database': f'Error saving user: {str(e)}'}
     
     @staticmethod
@@ -84,7 +86,7 @@ class UserService:
         """Delete a user."""
         user: Optional[User] = db.session.get(User, user_id)
         if not user:
-            # current_app.logger.warning(f"Attempted to delete non-existent user with ID: {user_id}")
+            current_app.logger.warning(f"Attempted to delete non-existent user with ID: {user_id}")
             return False
         
         try:
@@ -92,6 +94,11 @@ class UserService:
             # OAuth.query.filter_by(user_id=user_id).delete()
             # db.session.flush() # Process deletes before deleting user
             # Need to handle related entities if necessary (e.g., OAuth entries)
+            from app.models.oauth import OAuth
+            OAuth.query.filter_by(user_id=user_id).delete()
+            db.session.flush() 
+
+
             db.session.delete(user)
             db.session.commit()
             current_app.logger.info(f"Successfully deleted user with ID: {user_id}") 
@@ -115,7 +122,7 @@ class UserService:
         if not username:
             errors['username'] = "Username is required"
         else:
-            query = User.query.filter_by(username=username)
+            query = User.query.filter(User.username.ilike(username))
             if user_id: # If updating, exclude the current user
                 query = query.filter(User.id != user_id)
             if query.first():
@@ -125,7 +132,7 @@ class UserService:
             errors['email'] = "Email is required"
         else:
             # Basic email format check might be good here, but WTForms handles it too
-            query = User.query.filter_by(email=email)
+            query = User.query.filter(User.email.ilike(email))
             if user_id: # If updating, exclude the current user
                 query = query.filter(User.id != user_id)
             if query.first():
