@@ -2,7 +2,6 @@ from typing import Dict, Any, Optional, List, Tuple, cast
 from flask import current_app
 from app.models.db import db
 from app.models.user import User
-from app.models.role import Role
 from app.models.oauth import OAuth 
 
 

@@ -5,6 +5,10 @@ from app.forms.user import UserForm, UserEditForm
 from app.models.user import User
 from functools import wraps
 from typing import Callable, Any, Dict, Optional, Union, cast, TypeVar, List
+from app.services.role_service import RoleService
+from app.forms.role import RoleEditForm
+from app.models import Role
+
 
 # Define a generic type variable for the decorator
 F = TypeVar('F', bound=Callable[..., Any])
@@ -74,7 +78,10 @@ def add_user() -> Union[str, Response]:
                           getattr(form, field).errors.append(error_list)
             
         else:
-            flash(f'User "{user.username}" created successfully!', 'success')
+            if user:
+                flash(f'User "{user.username}" created successfully!', 'success')
+            else:
+                flash('User created successfully!', 'success')
             return redirect(url_for('admin.user_list'))
     
     return render_template('admin/users/add.html', form=form, title="Add New User")
@@ -122,7 +129,7 @@ def edit_user(user_id: int) -> Union[str, Response]:
     
     return render_template('admin/users/edit.html', form=form, user=user, title=f"Edit User: {user.username}")
 
-# --- delete_user route remains the same ---
+# --- delete_user route  ---
 @admin_bp.route('/users/delete/<int:user_id>')
 @login_required
 @permission_required('manage_users')
@@ -137,3 +144,50 @@ def delete_user(user_id: int) -> Response:
         flash('User not found. or error deleting user.', 'danger')
     
     return redirect(url_for('admin.user_list'))
+
+# === Role Management Routes ===
+
+@admin_bp.route('/roles')
+@login_required
+@permission_required('manage_users') 
+def list_roles() -> str:
+    """Displays a list of all roles."""
+    roles: List[Role] = RoleService.get_all_roles()
+    return render_template('admin/roles/list.html', roles=roles, title="Role Management")
+
+@admin_bp.route('/roles/edit/<int:role_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('manage_users') 
+def edit_role(role_id: int) -> Union[str, Response]:
+    """Edit permissions assigned to a role."""
+    role: Optional[Role] = RoleService.get_role_by_id(role_id)
+    if not role:
+        flash('Role not found.', 'danger')
+        return redirect(url_for('admin.list_roles')) # Redirect to role list
+
+    # Create form, pre-populate with role data for GET
+    form: RoleEditForm = RoleEditForm(obj=role)
+
+    # Pre-populate the permissions checkboxes for GET request
+    if request.method == 'GET':
+        # form.permissions.data should contain Permission objects
+        form.permissions.data = role.permissions.all() # Use .all() as it's a dynamic relationship
+
+    if form.validate_on_submit():
+        # Get list of Permission objects selected in the form
+        selected_permission_objects = form.permissions.data
+        # Extract just the IDs to pass to the service
+        permission_ids = [perm.id for perm in selected_permission_objects]
+
+        # Call the service to update assignments
+        updated_role, error_msg = RoleService.update_role_permissions(role_id, permission_ids)
+
+        if error_msg:
+            flash(f"Error updating role '{role.name}': {error_msg}", 'danger')
+        else:
+            flash(f'Permissions for role "{role.name}" updated successfully!', 'success')
+        # Redirect back to the roles list after attempting update
+        return redirect(url_for('admin.list_roles'))
+
+    # Render the edit template for GET or if validation fails
+    return render_template('admin/roles/edit.html', form=form, role=role, title=f"Edit Role: {role.name}")
