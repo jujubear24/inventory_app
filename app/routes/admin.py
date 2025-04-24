@@ -11,25 +11,42 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 admin_bp: Blueprint = Blueprint('admin', __name__, url_prefix='/admin')
 
-def admin_required(f: F) -> F:
-    @wraps(f)
-    def decorated_function(*args: Any, **kwargs: Any) -> Any:
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash('You need to be an admin to access this page.', 'danger')
-            return redirect(url_for('main.product_list'))
-        return f(*args, **kwargs)
-    return cast(F, decorated_function)
+
+# Permission required decorator
+def permission_required(permission_name: str) -> Callable:
+    """Decorator to check if the current user has the required permission."""
+
+    def decorator(f: F) -> F:
+        @wraps(f)
+        def decorated_function(*args: Any, **kwargs: Any) -> Any:
+            # 1. Check if user is authenticated
+            if not current_user.is_authenticated:
+                flash('Please log in to access this page.', 'info')
+                return redirect(url_for('auth.login', next=request.url))
+
+            # 2. Check if user has the required permission
+            if not current_user.has_permission(permission_name):
+                flash(f'You do not have permission to access this resource ({permission_name}).', 'danger')
+                # Redirect to a more appropriate page, like the dashboard
+                return redirect(url_for('main.product_list'))
+
+            # 3. User is authenticated and has permission
+            return f(*args, **kwargs)
+        return cast(F, decorated_function)
+    return decorator
+
+
 
 @admin_bp.route('/users')
 @login_required
-@admin_required
+@permission_required('view_users')
 def user_list() -> str:
     users: List[User] = UserService.get_all_users()
     return render_template('admin/users/list.html', users=users, title="User Management")
 
 @admin_bp.route('/users/add', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@permission_required('manage_users')
 def add_user() -> Union[str, Response]:
     form: UserForm = UserForm()
     if form.validate_on_submit():
@@ -64,7 +81,7 @@ def add_user() -> Union[str, Response]:
 
 @admin_bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@permission_required('manage_users')
 def edit_user(user_id: int) -> Union[str, Response]:
     user: Optional[User] = UserService.get_user_by_id(user_id)
     if not user:
@@ -108,7 +125,7 @@ def edit_user(user_id: int) -> Union[str, Response]:
 # --- delete_user route remains the same ---
 @admin_bp.route('/users/delete/<int:user_id>')
 @login_required
-@admin_required
+@permission_required('manage_users')
 def delete_user(user_id: int) -> Response:
     if current_user.id == user_id:
         flash('You cannot delete yourself.', 'danger')
