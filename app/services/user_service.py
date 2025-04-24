@@ -2,6 +2,8 @@ from typing import Dict, Any, Optional, List, Tuple, cast
 from flask import current_app
 from app.models.db import db
 from app.models.user import User
+from app.models.role import Role
+from app.models.oauth import OAuth 
 
 
 class UserService:
@@ -13,7 +15,7 @@ class UserService:
     @staticmethod
     def get_user_by_id(user_id: int) -> Optional[User]:
         """Get a user by ID."""
-        return db.session.get(User, user_id)  # Using newer API as recommended
+        return db.session.get(User, user_id)
     
     @staticmethod
     def create_user(user_data: Dict[str, Any]) -> Tuple[Optional[User], Dict[str, str]]:
@@ -94,7 +96,6 @@ class UserService:
             # OAuth.query.filter_by(user_id=user_id).delete()
             # db.session.flush() # Process deletes before deleting user
             # Need to handle related entities if necessary (e.g., OAuth entries)
-            from app.models.oauth import OAuth
             OAuth.query.filter_by(user_id=user_id).delete()
             db.session.flush() 
 
@@ -107,7 +108,7 @@ class UserService:
             db.session.rollback()
             current_app.logger.error(
                 f"Error deleting user with ID: {user_id}. Session rolled back.",
-                exc_info=True # Set to True to include traceback in logs
+                exc_info=True 
             )
             return False
     
@@ -131,7 +132,6 @@ class UserService:
         if not email:
             errors['email'] = "Email is required"
         else:
-            # Basic email format check might be good here, but WTForms handles it too
             query = User.query.filter(User.email.ilike(email))
             if user_id: # If updating, exclude the current user
                 query = query.filter(User.id != user_id)
