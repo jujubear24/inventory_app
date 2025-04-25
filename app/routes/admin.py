@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, Response, request
+from flask import Blueprint, render_template, redirect, url_for, flash, Response, request, current_app
 from flask_login import login_required, current_user
 from app.services.user_service import UserService
 from app.forms.user import UserForm, UserEditForm
@@ -8,6 +8,7 @@ from typing import Callable, Any, Dict, Optional, Union, cast, TypeVar, List
 from app.services.role_service import RoleService
 from app.forms.role import RoleEditForm
 from app.models import Role
+
 
 
 # Define a generic type variable for the decorator
@@ -163,15 +164,11 @@ def edit_role(role_id: int) -> Union[str, Response]:
     role: Optional[Role] = RoleService.get_role_by_id(role_id)
     if not role:
         flash('Role not found.', 'danger')
-        return redirect(url_for('admin.list_roles')) # Redirect to role list
+        return redirect(url_for('admin.list_roles')) 
 
     # Create form, pre-populate with role data for GET
     form: RoleEditForm = RoleEditForm(obj=role)
 
-    # Pre-populate the permissions checkboxes for GET request
-    if request.method == 'GET':
-        # form.permissions.data should contain Permission objects
-        form.permissions.data = role.permissions.all() # Use .all() as it's a dynamic relationship
 
     if form.validate_on_submit():
         # Get list of Permission objects selected in the form
@@ -188,6 +185,9 @@ def edit_role(role_id: int) -> Union[str, Response]:
             flash(f'Permissions for role "{role.name}" updated successfully!', 'success')
         # Redirect back to the roles list after attempting update
         return redirect(url_for('admin.list_roles'))
+    elif request.method == 'POST':
+        current_app.logger.warning(f"Role edit form validation failed: {form.errors}")
+
 
     # Render the edit template for GET or if validation fails
     return render_template('admin/roles/edit.html', form=form, role=role, title=f"Edit Role: {role.name}")

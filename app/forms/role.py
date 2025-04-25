@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
+from wtforms.widgets import ListWidget, CheckboxInput
 from wtforms.validators import Optional, Length
 from wtforms_sqlalchemy.fields import QuerySelectMultipleField
 from app.models import Permission
@@ -21,7 +22,9 @@ class RoleEditForm(FlaskForm):
         query_factory=get_permissions, 
         get_label='name',        # Use the Permission.name attribute as the display label
         allow_blank=True,        # Allow a role to have no permissions selected
-        validators=[Optional()]
+        validators=[Optional()],
+        widget=ListWidget(prefix_label=False),
+        option_widget=CheckboxInput()
     )
     submit = SubmitField('Update Role Permissions')
 
