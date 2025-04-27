@@ -1,5 +1,6 @@
 """Test the product service."""
 from app.services.product_service import ProductService
+from decimal import Decimal 
 
 def test_create_product_successful(app):
     """Test successfully creating a product."""
@@ -20,7 +21,7 @@ def test_create_product_successful(app):
         assert product.name == 'Test Product'
         assert product.sku == 'TST001'
         assert product.description == 'Test description'
-        assert product.price == 29.99
+        assert product.price == Decimal(29.99)
         assert product.stock_level == 100
         assert product.low_stock_threshold == 20
 
