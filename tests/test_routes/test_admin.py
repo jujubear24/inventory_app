@@ -2,6 +2,7 @@ import pytest
 from flask import url_for
 from app import create_app, db
 from app.models.user import User
+from app.models.role import Role
 from unittest.mock import patch, MagicMock
 
 @pytest.fixture(scope='module')
@@ -15,15 +16,39 @@ def test_app():
 
     with app.app_context():
         db.create_all()
-        regular_user = User(username='testuser', email='test@example.com', is_admin=False)
+
+        # --- Role Setup ---
+
+        # Create the Admin role if it doesn't exist (important for is_admin property)
+        admin_role = Role.query.filter_by(name='Admin').first()
+        if not admin_role:
+            admin_role = Role(name='Admin', description='Administrator role')
+            db.session.add(admin_role)
+            db.session.commit() # Commit role first if needed, or commit all at the end
+
+        # --- User Creation ---
+        regular_user = User(username='testuser', email='test@example.com')
         regular_user.set_password('password')
-        admin_user = User(username='adminuser', email='admin@example.com', is_admin=True)
+
+        admin_user = User(username='adminuser', email='admin@example.com')
         admin_user.set_password('adminpassword')
+
+        # --- Associate Role with Admin User ---
+        admin_user.roles.append(admin_role)
+
+        # --- Add users to session and commit ---
         db.session.add_all([regular_user, admin_user])
         db.session.commit()
-        # Verify users were created correctly
+
+        # Verify users were created correctly and admin has the role
+        retrieved_regular = User.query.filter_by(username='testuser').first()
         retrieved_admin = User.query.filter_by(username='adminuser').first()
-        assert retrieved_admin is not None and retrieved_admin.is_admin is True
+        assert retrieved_regular is not None
+        assert retrieved_admin is not None
+        assert retrieved_admin.has_role('Admin') is True
+        assert retrieved_admin.is_admin is True
+        assert retrieved_regular.is_admin is False
+
         yield app
         # Cleanup typically handled by ending the context with in-memory db
 
