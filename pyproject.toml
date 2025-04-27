@@ -50,8 +50,11 @@ dev = [
     "pytest-flask==1.3.0",
 ]
 
-# Add other sections like [build-system] if you have them or need them
-# e.g., for build backends like setuptools, hatchling, etc.
-# [build-system]
-# requires = ["setuptools>=61.0"]
-# build-backend = "setuptools.build_meta"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
+
