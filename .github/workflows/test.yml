@@ -10,39 +10,59 @@ jobs:
   test:
     name: Run tests and collect coverage
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout
+    - name: Checkout 
       uses: actions/checkout@v4
       with:
-        fetch-depth: 2
-        
-    - name: Set up Python
+        fetch-depth: 2 
+
+    - name: Set up Python 
       uses: actions/setup-python@v4
+      id: setup-python # Give the step an ID to reference its outputs if needed
       with:
         python-version: '3.11'
-    
-    - name: Install uv
+
+    - name: Install uv 
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Cache uv's global cache and the local virtual environment
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      id: uv-cache # Give cache step an ID
+      with:
+        path: |
+          ~/.cache/uv
+          .venv
+        # Key invalidates if pyproject.toml changes, Python version changes, or runner OS changes
+        key: ${{ runner.os }}-python-3.11-uv-${{ hashFiles('pyproject.toml') }}
+        # Fallback if exact key isn't found
+        restore-keys: |
+          ${{ runner.os }}-python-3.11-uv-
+
+    # Create venv (uv handles this idempotently) and install dependencies
+    - name: Install dependencies
+      # Only run install if cache wasn't hit or venv needs update (simplest: run always)
       run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-    
-    - name: Create virtual environment and install dependencies
-      run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install -r requirements.txt
-        uv pip install pytest pytest-flask pytest-cov coverage
-    
+        uv venv 
+        # Installs core dependencies + [dev] dependencies from pyproject.toml
+        uv pip install .[dev]
+
+    # Run tests within the uv-managed environment
     - name: Run tests with coverage
+      env:
+        # Provide the necessary dummy secret key for test app creation
+        SECRET_KEY: 'a-dummy-testing-secret-key'
       run: |
-        source .venv/bin/activate
-        pytest --cov=app --cov-branch --cov-report=xml:coverage.xml
-    
+        # Use uv run to execute pytest within the correct environment
+        uv run pytest --cov=app --cov-branch --cov-report=xml:coverage.xml
+
+    # Upload coverage report
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-
+        # Optional: specify coverage file if not default xml path
+        # file: ./coverage.xml
 
 
