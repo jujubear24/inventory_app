@@ -8,7 +8,7 @@ dependencies = [
     # Core Application Dependencies
     "alembic==1.15.2",
     "blinker==1.9.0",
-    "certifi==2024.1.31", 
+    "certifi==2025.4.26", 
     "charset-normalizer==3.4.1",
     "click==8.1.8",
     "dnspython==2.7.0",
