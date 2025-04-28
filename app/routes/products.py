@@ -28,7 +28,7 @@ def add_product() -> Union[str, Response]:
                 else: # Fallback for unexpected errors
                      flash(f"Error with {field}: {error_msg}", 'danger')
     # If GET request or form validation failed
-    return render_template('add_product.html', title='Add Product', form=form)
+    return render_template('products/add.html', title='Add Product', form=form)
 
 
 # Route: Edit product

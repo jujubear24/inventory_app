@@ -21,7 +21,7 @@ def test_create_product_successful(app):
         assert product.name == 'Test Product'
         assert product.sku == 'TST001'
         assert product.description == 'Test description'
-        assert product.price == Decimal(29.99)
+        assert product.price == Decimal('29.99')
         assert product.stock_level == 100
         assert product.low_stock_threshold == 20
 

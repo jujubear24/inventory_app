@@ -162,7 +162,7 @@
                                     product.stock_level }}</span> / Threshold: {{ product.low_stock_threshold }}</div>
                         </div>
                         <div>
-                            <a href="{{ url_for('routes.stock_in', product_id=product.id) }}"
+                            <a href="{{ url_for('products.stock_in', product_id=product.id) }}"
                                 class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
                                 title="Stock In">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
