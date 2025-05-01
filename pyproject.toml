@@ -8,7 +8,7 @@ dependencies = [
     # Core Application Dependencies
     "alembic==1.15.2",
     "blinker==1.9.0",
-    "certifi==2025.4.26", 
+    "certifi==2025.4.26",
     "charset-normalizer==3.4.1",
     "click==8.1.8",
     "dnspython==2.7.0",
@@ -26,7 +26,7 @@ dependencies = [
     "mako==1.3.10", # Dependency of Alembic
     "markupsafe==2.1.3",
     "oauthlib==3.2.2",
-    "packaging==25.0", # Often a transitive dependency, safe to list
+    "packaging==25.0",
     "python-dotenv==1.0.0",
     "requests==2.32.3",
     "requests-oauthlib==2.0.0",
@@ -45,9 +45,10 @@ dev = [
     "coverage==7.3.2",
     "iniconfig==2.1.0", # Pytest dependency
     "pluggy==1.5.0", # Pytest dependency
-    "pytest==7.4.3",
     "pytest-cov==4.1.0",
-    "pytest-flask==1.3.0",
+    "pytest-flask<=1.3.0",
+    "pytest-mock<=3.14.0", # Often a transitive dependency, safe to list
+    "pytest<=7.4.3",
 ]
 
 

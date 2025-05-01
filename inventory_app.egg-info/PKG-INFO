@@ -1,0 +1,85 @@
+Metadata-Version: 2.4
+Name: inventory-app
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: alembic==1.15.2
+Requires-Dist: blinker==1.9.0
+Requires-Dist: certifi==2025.4.26
+Requires-Dist: charset-normalizer==3.4.1
+Requires-Dist: click==8.1.8
+Requires-Dist: dnspython==2.7.0
+Requires-Dist: email-validator==2.1.0
+Requires-Dist: flask==2.3.3
+Requires-Dist: flask-dance==7.1.0
+Requires-Dist: flask-login==0.6.3
+Requires-Dist: flask-migrate==4.1.0
+Requires-Dist: flask-sqlalchemy==3.1.1
+Requires-Dist: flask-wtf==1.2.1
+Requires-Dist: greenlet==3.2.0
+Requires-Dist: idna==3.10
+Requires-Dist: itsdangerous==2.1.2
+Requires-Dist: jinja2==3.1.2
+Requires-Dist: mako==1.3.10
+Requires-Dist: markupsafe==2.1.3
+Requires-Dist: oauthlib==3.2.2
+Requires-Dist: packaging==25.0
+Requires-Dist: python-dotenv==1.0.0
+Requires-Dist: requests==2.32.3
+Requires-Dist: requests-oauthlib==2.0.0
+Requires-Dist: sqlalchemy==2.0.23
+Requires-Dist: typing-extensions==4.13.2
+Requires-Dist: urllib3==2.4.0
+Requires-Dist: urlobject==2.4.3
+Requires-Dist: werkzeug==2.3.7
+Requires-Dist: wtforms==3.1.1
+Requires-Dist: wtforms-sqlalchemy==0.4.2
+Provides-Extra: dev
+Requires-Dist: coverage==7.3.2; extra == "dev"
+Requires-Dist: iniconfig==2.1.0; extra == "dev"
+Requires-Dist: pluggy==1.5.0; extra == "dev"
+Requires-Dist: pytest-cov==4.1.0; extra == "dev"
+Requires-Dist: pytest-flask<=1.3.0; extra == "dev"
+Requires-Dist: pytest-mock<=3.14.0; extra == "dev"
+Requires-Dist: pytest<=7.4.3; extra == "dev"
+Dynamic: license-file
+
+# Inventory Management System (Flask)
+
+[![codecov](https://codecov.io/gh/jujubear24/inventory_app/graph/badge.svg?token=2THBYJRRBE)](https://codecov.io/gh/jujubear24/inventory_app)
+
+This project is a Flask-based web application that provides a simple and efficient solution for managing product inventory. It addresses the challenges faced by small businesses in tracking stock levels, preventing stockouts, and generating reports.
+
+## Features
+
+* Product Management: Add, edit, and delete products.
+* Inventory Tracking: Record stock level updates.
+* Low-Stock Alerts: Receive notifications when stock levels are low.
+* Reporting: Generate reports on inventory levels.
+
+## Technologies Used
+
+* Flask
+* SQLAlchemy
+* SQLite
+* Jinja2
+* HTML/CSS (Bootstrap or similar, if used)
+* uv (for package management)
+
+## Getting Started
+
+1. Clone the repository: `git clone <repository_url>`
+2. Create a virtual environment using `uv`: `uv venv .venv`
+3. Activate the virtual environment: `source .venv/bin/activate`
+4. Install dependencies: `uv pip install -r requirements.txt`
+5. Run the application: `flask run`
+
+## Author
+
+[Jules Bahanyi](https://github.com/jujubear24)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
