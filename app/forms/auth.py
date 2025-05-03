@@ -1,16 +1,17 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional
 from app.models.user import User
-from typing import Optional
+
 
 def optional_length(min=None, max=None):
     def _optional_length(form, field):
-        if field.data and len(field.data) < min:
-            raise ValidationError(f'Field must be at least {min} characters long if provided.')
-        elif field.data and max and len(field.data) > max:
-            raise ValidationError(f'Field cannot be longer than {max} characters.')
-    return _optional_length
+        if field.data:
+            if min is not None and len(field.data) < min:
+                raise ValidationError(f'Field must be at least {min} characters long if provided.')
+            if max is not None and len(field.data) > max:
+                 raise ValidationError(f'Field cannot be longer than {max} characters.')
+        return _optional_length
 
 class LoginForm(FlaskForm):
     username: StringField = StringField('Username', validators=[DataRequired()])
@@ -41,10 +42,10 @@ class RegistrationForm(FlaskForm):
 class ProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    first_name = StringField('First Name', validators=[Length(max=64)])
-    last_name = StringField('Last Name', validators=[Length(max=64)])
-    current_password = PasswordField('Current Password')
-    new_password = PasswordField('New Password', validators=[optional_length(min=8)])
-    confirm_password = PasswordField('Confirm New Password', validators=[EqualTo('new_password')])
+    first_name = StringField('First Name', validators=[Optional(), Length(max=64)])
+    last_name = StringField('Last Name', validators=[Optional(), Length(max=64)])
+    current_password = PasswordField('Current Password', validators=[Optional()])
+    new_password = PasswordField('New Password', validators=[Optional(), Length(min=8)])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[Optional(), EqualTo('new_password',  message='New passwords must match.')])
     submit = SubmitField('Save Changes')
 

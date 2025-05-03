@@ -78,12 +78,14 @@
                 <p class="mt-1 text-sm text-gray-500">Leave blank if you don't want to change your password.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-4">
-
-                    <div>{{ render_field(form.username) }}</div>
-                    <div>{{ render_field(form.email) }}</div>
-                    <div>{{ render_field(form.first_name) }}</div>
-                    <div>{{ render_field(form.last_name) }}</div
+                    {# Corrected: Render the actual password fields #}
+                    <div>{{ render_field(form.current_password) }}</div>
+                    <div>{{ render_field(form.new_password) }}</div>
+                    {# Add this line if you have a confirm_new_password field #}
+                    <div>{{ render_field(form.confirm_new_password) }}</div>
                 </div>
+
+                
             </div>
 
             <div class="flex justify-end pt-4">
