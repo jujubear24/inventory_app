@@ -3,7 +3,7 @@ from flask import current_app
 from app.models.db import db
 from app.models.user import User
 from app.models.oauth import OAuth 
-
+from app.models.role import Role
 
 class UserService:
     @staticmethod
@@ -32,8 +32,14 @@ class UserService:
         user.set_password(cast(str, user_data.get('password', '')))
 
         # --- Assign Roles ---
-        selected_roles = user_data.get('roles', [])
-        user.roles = selected_roles
+        selected_role_names = user_data.get('roles', [])
+
+        if selected_role_names:
+            roles = Role.query.filter(Role.name.in_(selected_role_names)).all()
+            # You might want to add error handling here if a role name doesn't exist
+            user.roles = roles
+        else:
+            user.roles = [] # Ensure it's an empty list if no roles provided
 
         try:
             db.session.add(user)
@@ -71,7 +77,13 @@ class UserService:
         
         # Update roles
         if 'roles' in user_data:
-            user.roles = user_data['roles']
+            selected_role_names = user_data['roles']
+            if selected_role_names:
+                roles = Role.query.filter(Role.name.in_(selected_role_names)).all()
+                # Add error handling if needed (e.g., if a role name is invalid)
+                user.roles = roles
+            else:
+                user.roles = [] 
         
         try:
             db.session.commit()
@@ -112,34 +124,57 @@ class UserService:
             return False
     
     @staticmethod
-    def validate_user_data(data: Dict[str, Any], user_id: Optional[int] = None, is_new: bool = True) -> Dict[str, str]:
-        """Validate user data and return errors."""
+    def _validate_user_format(data: Dict[str, Any], is_new: bool = True) -> Dict[str, str]:
+        """Validate basic format/presence rules, no DB access."""
         errors: Dict[str, str] = {}
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
 
+        # --- Presence Checks ---
         if not username:
             errors['username'] = "Username is required"
-        else:
+        if not email:
+            errors['email'] = "Email is required"
+        if is_new and not password:
+            errors['password'] = "Password is required"
+
+        # --- Format Checks ---
+        if password and len(password) < 8:
+             errors['password'] = "Password must be at least 8 characters"
+
+        return errors
+    
+    @staticmethod
+    def validate_user_data(data: Dict[str, Any], user_id: Optional[int] = None, is_new: bool = True) -> Dict[str, str]:
+        """Validate user data including forat and uniquebess checks."""
+         # 1. Perform basic format/presence validation first
+        errors: Dict[str, str] = UserService._validate_user_format(data, is_new=is_new)
+        if errors:
+            # If basic validation fails, return errors immediately, skip DB checks
+            return errors
+
+        # 2. Perform uniqueness checks (DB access needed) only if format is okay
+        username = data.get('username')
+        email = data.get('email')
+
+        # Check username uniqueness
+        if username: # Check only needed if username passed basic validation
             query = User.query.filter(User.username.ilike(username))
             if user_id: # If updating, exclude the current user
                 query = query.filter(User.id != user_id)
             if query.first():
                 errors['username'] = "Username already taken"
-        
-        if not email:
-            errors['email'] = "Email is required"
-        else:
+
+        # Check email uniqueness
+        if email: # Check only needed if email passed basic validation
             query = User.query.filter(User.email.ilike(email))
             if user_id: # If updating, exclude the current user
                 query = query.filter(User.id != user_id)
             if query.first():
                 errors['email'] = "Email already registered"
-        
-        if is_new and not password:
-            errors['password'] = "Password is required"
-        if password and len(password) < 8:
-             errors['password'] = "Password must be at least 8 characters"
-        
-        return errors 
+
+        return errors
+
+       
+    

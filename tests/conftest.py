@@ -17,6 +17,16 @@ def client(app):
     """Create a test client for the app."""
     return app.test_client()
 
+
+@pytest.fixture
+def app_context(app):
+    """Creates and yields an application context for tests."""
+    with app.app_context() as ctx: 
+        print(f"DEBUG: Yielding app_context: {ctx}") # Optional debug print
+        yield ctx 
+
+
+
 @pytest.fixture
 def sample_products(app):
     """Create sample products for testing."""

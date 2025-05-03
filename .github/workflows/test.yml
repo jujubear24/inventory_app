@@ -6,30 +6,36 @@ on:
   pull_request:
     branches: [main]
 
+  workflow_dispatch: 
+
+
 jobs:
   test:
     name: Run tests and collect coverage
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the repo
     - name: Checkout 
       uses: actions/checkout@v4
       with:
         fetch-depth: 2 
-
+    
+    # Step 2: Set up Python version
     - name: Set up Python 
       uses: actions/setup-python@v4
       id: setup-python # Give the step an ID to reference its outputs if needed
       with:
         python-version: '3.11'
-
+    
+    # Step 3: Install UV 
     - name: Install uv 
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # Cache uv's global cache and the local virtual environment
+    # Step 4: Cache dependencies for faster subsequent runs
     - name: Cache dependencies
       uses: actions/cache@v4
-      id: uv-cache # Give cache step an ID
+      id: uv-cache 
       with:
         path: |
           ~/.cache/uv
@@ -40,15 +46,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-python-3.11-uv-
 
-    # Create venv (uv handles this idempotently) and install dependencies
+    # Step 5:  Create venv and install dependencies using uv
     - name: Install dependencies
-      # Only run install if cache wasn't hit or venv needs update (simplest: run always)
       run: |
         uv venv 
         # Installs core dependencies + [dev] dependencies from pyproject.toml
         uv pip install .[dev]
 
-    # Run tests within the uv-managed environment
+    # Step 6: Run tests within the uv-managed environment
     - name: Run tests with coverage
       env:
         # Provide the necessary dummy secret key for test app creation
@@ -64,5 +69,6 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         # Optional: specify coverage file if not default xml path
         # file: ./coverage.xml
+      continue-on-error: true
 
 
