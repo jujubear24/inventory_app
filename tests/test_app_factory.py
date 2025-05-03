@@ -5,7 +5,7 @@ from app.models.user import User
 from app.models.db import (
     db as app_db,
 )  # Alias to avoid conflict with db fixture if you add one
-from config import config_by_name as config, DevelopmentConfig
+from config import config_by_name as config, TestingConfig
 import logging
 import os
 
@@ -13,6 +13,7 @@ import os
 # === FIXTURES ===
 @pytest.fixture(scope="module")
 def app():
+
     """Fixture to create and configure a new app instance for testing."""
 
     # Use 'testing' config and ensure necessary settings are present
@@ -44,32 +45,31 @@ def app_context(app):
 # --- Test Configuration Loading and Checks ---
 
 
-def test_create_app_default_config():
+def test_create_app_uses_flask_env_when_no_config_name(monkeypatch):
+    """
+    Test create_app() uses FLASK_ENV to determine config
+    when config_name is None. We'll set FLASK_ENV=testing.
+    """
+    monkeypatch.setenv('FLASK_ENV', 'testing')
+    
+    expected_config_class = config["testing"]
 
-    """Test creating app without config_name uses default (DevelopmentConfig)"""
-
-    expected_config_class = config["default"]
-    assert expected_config_class == DevelopmentConfig
+    assert expected_config_class == TestingConfig
 
     app = create_app()
 
-    config_key_to_check = 'DEBUG'
-    expected_value = getattr(expected_config_class, config_key_to_check, None)
-    assert (
-        expected_value is True
-    ), "Test setup issue: Expected DevelopmentConfig.DEBUG to be True"
+    # Assert: Check values known to be set by TestingConfig
+    assert 'TESTING' in app.config, "'TESTING' key not found in app.config"
+    assert app.config['TESTING'] is True, "app.config['TESTING'] was not True, TestingConfig likely not loaded."
 
-    assert (
-        config_key_to_check in app.config
-    ), f"Key '{config_key_to_check}' expected from {expected_config_class.__name__} not found in app.config"
-
-    assert (
-        config_key_to_check in app.config
-    ), f"Key '{config_key_to_check}' expected from DevelopmentConfig not found in app.config"
-
-    assert (
-        app.config[config_key_to_check] is True
-    ), f"Value mismatch for '{config_key_to_check}'. Expected True, got {app.config[config_key_to_check]}"
+  
+    assert 'SQLALCHEMY_DATABASE_URI' in app.config
+    expected_uri = getattr(expected_config_class, 'SQLALCHEMY_DATABASE_URI', 'URI_NOT_IN_CLASS')
+    assert app.config['SQLALCHEMY_DATABASE_URI'] == expected_uri
+ 
+ 
+    assert 'sqlite:///:memory:' in app.config['SQLALCHEMY_DATABASE_URI'], \
+        "Expected in-memory SQLite DB URI for TestingConfig"
 
 
 def test_create_app_testing_config():
@@ -92,12 +92,13 @@ def test_create_app_missing_secret_key_raises_error(monkeypatch):
 
 
 @patch("app.__init__.get_app_config", return_value={})
-def test_create_app_missing_db_uri_logs_warning_and_raises_error(mock_get_app_config, monkeypatch, caplog):
-
+def test_create_app_missing_db_uri_logs_warning_and_raises_error(
+    mock_get_app_config, monkeypatch, caplog
+):
     """Test warning logged and RuntimeError raised if SQLALCHEMY_DATABASE_URI is missing."""
 
     # 1. Get the config class object
-    target_config_class = config["testing"]  
+    target_config_class = config["testing"]
 
     # 2. Set the URI to None on the class
     monkeypatch.setattr(target_config_class, "SQLALCHEMY_DATABASE_URI", None)
