@@ -1,0 +1,39 @@
+name: Cycle Dev Branch After Main Merge
+on:
+  pull_request:
+    types: [closed] # Runs when a PR is closed
+    branches: [main] # Only for PRs that were targeting the main branch
+
+jobs:
+  recreate_dev_branch:
+    # Only run if the PR was merged AND the source branch was 'dev'
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push branches
+
+    steps:
+      - name: Checkout repository on main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main # Explicitly checkout the main branch (which has just been updated)
+          fetch-depth: 0 # Fetch all history so we can access origin/main correctly
+
+      - name: Configure Git User
+        run: |
+          git config user.name "${{ github.actor }}" # Or a dedicated bot user
+          git config user.email "${{ github.actor_id}}+${{ github.actor }}@users.noreply.github.com"
+
+      - name: Delete old remote dev branch (if not auto-deleted by GitHub)
+        # This step is a safeguard. If "Automatically delete head branches" is enabled
+        # in your repo settings, GitHub will delete 'dev' when the PR is merged.
+        # '|| true' ensures the workflow doesn't fail if the branch is already deleted.
+        run: git push origin --delete dev || true
+
+      - name: Create new dev branch from main
+        run: |
+          git checkout -b dev origin/main # Create a new local 'dev' branch from the latest state of 'origin/main'
+          git push -u origin dev          # Push the new 'dev' branch to the remote and set upstream
+
+      - name: Notify about new dev branch (Optional)
+        run: echo "New 'dev' branch has been created from 'main'."
