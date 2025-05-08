@@ -13,7 +13,6 @@ import os
 # === FIXTURES ===
 @pytest.fixture(scope="module")
 def app():
-
     """Fixture to create and configure a new app instance for testing."""
 
     # Use 'testing' config and ensure necessary settings are present
@@ -50,8 +49,8 @@ def test_create_app_uses_flask_env_when_no_config_name(monkeypatch):
     Test create_app() uses FLASK_ENV to determine config
     when config_name is None. We'll set FLASK_ENV=testing.
     """
-    monkeypatch.setenv('FLASK_ENV', 'testing')
-    
+    monkeypatch.setenv("FLASK_ENV", "testing")
+
     expected_config_class = config["testing"]
 
     assert expected_config_class == TestingConfig
@@ -59,17 +58,20 @@ def test_create_app_uses_flask_env_when_no_config_name(monkeypatch):
     app = create_app()
 
     # Assert: Check values known to be set by TestingConfig
-    assert 'TESTING' in app.config, "'TESTING' key not found in app.config"
-    assert app.config['TESTING'] is True, "app.config['TESTING'] was not True, TestingConfig likely not loaded."
+    assert "TESTING" in app.config, "'TESTING' key not found in app.config"
+    assert (
+        app.config["TESTING"] is True
+    ), "app.config['TESTING'] was not True, TestingConfig likely not loaded."
 
-  
-    assert 'SQLALCHEMY_DATABASE_URI' in app.config
-    expected_uri = getattr(expected_config_class, 'SQLALCHEMY_DATABASE_URI', 'URI_NOT_IN_CLASS')
-    assert app.config['SQLALCHEMY_DATABASE_URI'] == expected_uri
- 
- 
-    assert 'sqlite:///:memory:' in app.config['SQLALCHEMY_DATABASE_URI'], \
-        "Expected in-memory SQLite DB URI for TestingConfig"
+    assert "SQLALCHEMY_DATABASE_URI" in app.config
+    expected_uri = getattr(
+        expected_config_class, "SQLALCHEMY_DATABASE_URI", "URI_NOT_IN_CLASS"
+    )
+    assert app.config["SQLALCHEMY_DATABASE_URI"] == expected_uri
+
+    assert (
+        "sqlite:///:memory:" in app.config["SQLALCHEMY_DATABASE_URI"]
+    ), "Expected in-memory SQLite DB URI for TestingConfig"
 
 
 def test_create_app_testing_config():
@@ -110,7 +112,7 @@ def test_create_app_missing_db_uri_logs_warning_and_raises_error(
     with pytest.raises(RuntimeError) as excinfo:
         # Call create_app within the raises block
         # The warning log should happen *before* the exception here
-        app = create_app("testing")
+        app = create_app("testing")  # noqa: F841
 
     # 5. Check the exception message from Flask-SQLAlchemy
     assert "Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set" in str(
@@ -139,7 +141,7 @@ def test_create_app_missing_google_keys_logs_warning(
     # Ensure caplog captures WARNING level logs
     caplog.set_level(logging.WARNING)
 
-    app = create_app("testing")
+    app = create_app("testing")  # noqa: F841
 
     log_messages = [rec.message for rec in caplog.records if rec.levelname == "WARNING"]
 

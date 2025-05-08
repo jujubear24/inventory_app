@@ -7,5 +7,5 @@ inventory_app.egg-info/SOURCES.txt
 inventory_app.egg-info/dependency_links.txt
 inventory_app.egg-info/requires.txt
 inventory_app.egg-info/top_level.txt
+tests/test_app_factory.py
 tests/test_config.py
-tests/test_minimal.py
