@@ -66,3 +66,4 @@ class User(db.Model, UserMixin):
                 return True
     
         return False
+

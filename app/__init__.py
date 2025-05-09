@@ -1,17 +1,16 @@
 # os and Dotenv Loading
 from dotenv import load_dotenv
 
-
 # Flask and related
 from flask import Flask, render_template, flash  
-
 
 # Extensions
 from flask_migrate import Migrate  
 from flask_login import LoginManager, current_user, login_user  
 from flask_dance.contrib.google import make_google_blueprint  
 from flask_dance.consumer import oauth_authorized  
-from flask_dance.consumer.storage.sqla import SQLAlchemyStorage  
+from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
+from flask_mail import Mail
 
 # Local App Components (Config, DB, Models)
 from config import get_config  
@@ -23,38 +22,46 @@ from app.models.oauth import OAuth
 
 load_dotenv()
 
+mail = Mail()
+
 # App factory to create Flask app instances
 def create_app(config_name=None):
     """Application factory for creating Flask app instances"""
-    
+
     app = Flask(__name__, instance_relative_config=True)
 
-     # Load configuration from config object based on FLASK_ENV
+    # Load configuration from config object based on FLASK_ENV
     selected_config = get_config(config_name)
     app.config.from_object(selected_config)
     print(f"--- FLASK DEBUG: Loaded SQLALCHEMY_DATABASE_URI = {app.config.get('SQLALCHEMY_DATABASE_URI')} ---")
     app.config.update(get_app_config())
 
-   
+    print(
+        f"--- FLASK DEBUG: Loaded MAIL_BACKEND = {app.config.get('MAIL_BACKEND')} ---"
+    )
+    print(
+        f"--- FLASK DEBUG: Loaded MAIL_DEFAULT_SENDER = {app.config.get('MAIL_DEFAULT_SENDER')} ---"
+    )
 
     if not app.config.get("SECRET_KEY"):
         app.logger.error("FATAL ERROR: SECRET_KEY environment variable is not set.")
         raise ValueError("SECRET_KEY is not configured. Cannot start application without it. Set the SECRET_KEY environment variable.")
-    
+
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):
-         app.logger.warning("SQLALCHEMY_DATABASE_URI environment variable is not set.")
-    
+        app.logger.warning("SQLALCHEMY_DATABASE_URI environment variable is not set.")
+
     # Ensure Google OAuth keys are set
     if not app.config.get("GOOGLE_OAUTH_CLIENT_ID") or not app.config.get("GOOGLE_OAUTH_CLIENT_SECRET"):
         app.logger.warning("Google OAuth Client ID or Secret not configured. Google login will not work.")
-    
+
     google_keys_set = app.config.get("GOOGLE_OAUTH_CLIENT_ID") and app.config.get("GOOGLE_OAUTH_CLIENT_SECRET")
     if not google_keys_set:
-         app.logger.warning("Google OAuth secrets not set. Google login will be disabled.")
-    
+        app.logger.warning("Google OAuth secrets not set. Google login will be disabled.")
+
     # Initialize db with the app
     db.init_app(app)
     Migrate(app, db)
+    mail.init_app(app)
 
     # Initialize Flask-Login
     login_manager = LoginManager()
@@ -67,8 +74,6 @@ def create_app(config_name=None):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-
-
     # Register CLI command for database initialization
     @app.cli.command("init-db")
     def init_db_command():
@@ -76,9 +81,8 @@ def create_app(config_name=None):
         with app.app_context():
             db.create_all()
         print("Initialized the database.")
-    
 
-     # --- Flask-Dance Google Blueprint Setup ---
+    # --- Flask-Dance Google Blueprint Setup ---
     # Only register if keys are configured
     google_bp = None
     if google_keys_set:
@@ -93,8 +97,6 @@ def create_app(config_name=None):
     else:
         google_bp = None
 
-
-    
     # Register blueprints
     from app.routes import main_bp, products_bp, reports_bp
     from app.routes.auth import auth_bp
@@ -109,16 +111,16 @@ def create_app(config_name=None):
     @app.errorhandler(403)
     def forbidden_error(error):
         return render_template('errors/403.html'), 403
-    
+
     @app.errorhandler(404)
     def not_found_error(error):
         return render_template('errors/404.html'), 404
-    
+
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()  # Rollback any failed database sessions
         return render_template('errors/500.html'), 500
-    
+
     # Create instance folder
     # try:
     #     os.makedirs(app.instance_path)
@@ -138,7 +140,7 @@ def create_app(config_name=None):
                 resp = blueprint.session.get("/oauth2/v1/userinfo")
                 resp.raise_for_status() # Raise exception for bad responses (4xx, 5xx)
                 google_info = resp.json()
-                
+
             except Exception as e:
                 app.logger.error(f"Failed to fetch user info from Google: {e}")
                 flash("Failed to fetch user info from Google.", category="error")
@@ -156,8 +158,6 @@ def create_app(config_name=None):
                 oauth_entry = OAuth.query.filter_by(
                     provider=blueprint.name, provider_user_id=google_user_id
                 ).one_or_none() # Use one_or_none for clarity
-
-               
 
                 if oauth_entry:
                     # OAuth connection exists, log in the associated user
@@ -197,9 +197,5 @@ def create_app(config_name=None):
                 return False # Prevent redirect on error
 
             return False # Return False to handle redirection manually if needed (e.g., flash message first)
-    
+
     return app
-
-
-
-
