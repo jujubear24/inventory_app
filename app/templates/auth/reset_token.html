@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% from "_form_helpers.html" import render_field %}
+
+{% block title %}{{ title or 'Reset Your Password' }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-full py-10">
+    <div class="w-full max-w-md">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="p-6 sm:p-8">
+                <div class="text-center mb-6">
+                    <a href="{{ url_for('main.product_list') }}" class="inline-block">
+                        <span class="text-3xl font-bold text-purple-700">StockTrack</span>
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-800 mt-3">{{ title or 'Set Your New Password' }}</h1>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Please enter your new password below.
+                    </p>
+                </div>
+
+                {# Flash messages specific to this form area #}
+                {% with messages = get_flashed_messages(with_categories=true, category_filter=['danger', 'info',
+                'success', 'warning']) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-3 rounded-md text-sm
+                                {% if category == 'danger' %} bg-red-100 border border-red-300 text-red-700
+                                {% elif category == 'success' %} bg-green-100 border border-green-300 text-green-700
+                                {% else %} bg-blue-100 border border-blue-300 text-blue-700 {% endif %}" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.reset_token', token=token) }}" class="space-y-4"
+                    novalidate>
+                    {{ form.hidden_tag() }}
+
+                    {{ render_field(form.password, placeholder='New Password') }}
+                    {{ render_field(form.password2, placeholder='Confirm New Password') }}
+
+                    <div>
+                        {{ form.submit(class="w-full flex justify-center py-2.5 px-4 border border-transparent
+                        rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

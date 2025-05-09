@@ -48,11 +48,24 @@ def send_password_reset_email(user: User) -> None:
         """
     # For development with MAIL_BACKEND = 'console', this will print to console.
     # In production, it will send an actual email.
+
+    # --- DEVELOPMENT LOGGING ---
+    if current_app.config.get("MAIL_SUPPRESS_SEND", False) or current_app.debug:
+        current_app.logger.info("---- PASSWORD RESET EMAIL (SIMULATED) ----")
+        current_app.logger.info(f"To: {user.email}")
+        current_app.logger.info(f"From: {sender_email}")
+        current_app.logger.info(f"Subject: {msg.subject}")
+        current_app.logger.info(f"Body:\n{msg.body}")
+        current_app.logger.info("---- END OF SIMULATED EMAIL ----")
+    # --- END DEVELOPMENT LOGGING ---
+
     try:
         mail.send(msg)
-        current_app.logger.info(
-            f"Password reset email ostensibly sent to {user.email} (token: {token})"
-        )
+        if not current_app.config.get("MAIL_SUPPRESS_SEND"):
+            current_app.logger.info(
+                f"Password reset email actually attempted for {user.email}"
+            )
+       
     except Exception as e:
         current_app.logger.error(
             f"Failed to send password reset email to {user.email}: {e}", exc_info=True
