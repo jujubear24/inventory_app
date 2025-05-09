@@ -49,3 +49,34 @@ class ProfileForm(FlaskForm):
     confirm_new_password = PasswordField('Confirm New Password', validators=[Optional(), EqualTo('new_password',  message='New passwords must match.')])
     submit = SubmitField('Save Changes')
 
+
+class RequestResetForm(FlaskForm):
+    email: StringField = StringField("Email", validators=[DataRequired(), Email()])
+    submit: SubmitField = SubmitField("Request Password Reset")
+
+    def validate_email(self, email: StringField) -> None:
+        user: Optional[User] = User.query.filter_by(email=email.data).first()
+        if not user:
+            raise ValidationError(
+                "There is no account with that email. You must register first."
+            )
+        # Ensure the user has a password_hash, indicating they registered with a password
+        # and are not, for example, an OAuth-only user.
+        if not user.password_hash:
+            raise ValidationError(
+                "This account was registered using an external provider and does not have a local password to reset."
+            )
+
+
+class ResetPasswordForm(FlaskForm):
+    password: PasswordField = PasswordField(
+        "New Password", validators=[DataRequired(), Length(min=8)]
+    )
+    password2: PasswordField = PasswordField(
+        "Confirm New Password",
+        validators=[
+            DataRequired(),
+            EqualTo("password", message="Passwords must match."),
+        ],
+    )
+    submit: SubmitField = SubmitField("Reset Password")
