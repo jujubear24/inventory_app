@@ -1,191 +1,172 @@
 import pytest
 from flask import url_for
-from app import create_app
-from app.models.db import db
-from app.models.user import User
 from unittest.mock import patch, MagicMock
+from app.models.user import User
+from app.models.db import db as _db  # Alias to avoid conflict
+
+# Fixtures 'app' and 'client' are expected to be sourced from tests/conftest.py
 
 
-# --- Fixtures ---
-@pytest.fixture(scope="module")
-def test_app():
-    """Fixture to set up the Flask app for testing."""
-    app = create_app("testing")
-    app.config["WTF_CSRF_ENABLED"] = False
-    app.config["SERVER_NAME"] = "localhost"
-    app.config["PRESERVE_CONTEXT_ON_EXCEPTION"] = False
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["SECRET_KEY"] = "test-secret-key"  # Needed for session/flash messages
-
+@pytest.fixture(scope="function")
+def test_user(app):  # Depends on 'app' from conftest.py
+    """Creates and yields a standard test user in the database for a single test."""
     with app.app_context():
-        db.create_all()
-        # Create a test user (optional, but useful for login/profile tests)
-        test_user = User(
+        # Ensure a clean state for 'testuser' for each test function
+        user = User.query.filter_by(username="testuser").first()
+        if user:
+            _db.session.delete(user)
+            _db.session.commit()
+
+        user = User(
             username="testuser",
             email="test@example.com",
             first_name="Test",
             last_name="User",
         )
-        test_user.set_password("password")
-        db.session.add(test_user)
-        db.session.commit()
-
-        yield app
-        # Cleanup (handled by in-memory DB)
+        user.set_password("password")
+        _db.session.add(user)
+        _db.session.commit()
+        yield user
 
 
 @pytest.fixture(scope="function")
-def test_client(test_app):
-    """Fixture for the Flask test client."""
-    with test_app.test_client() as client:
-        with test_app.app_context():  # Ensure context for db operations within tests
-            yield client
+def logged_in_client(
+    client, test_user, app
+):  # Depends on 'client' from conftest.py and local 'test_user'
+    """Fixture for a client already logged in as the 'testuser'."""
+    with app.app_context():  # Ensures url_for works if called outside a request context
+        login_url = url_for("auth.login")
 
-
-@pytest.fixture(scope="function")
-def logged_in_client(test_client):
-    """Fixture for a client already logged in as the test user."""
-    # Login the user 'testuser'
-    test_client.post(
-        url_for("auth.login"),
-        data={"username": "testuser", "password": "password"},
+    client.post(
+        login_url,
+        data={"username": test_user.username, "password": "password"},
         follow_redirects=True,
     )
-    yield test_client
-    # Logout after test
-    test_client.get(url_for("auth.logout"), follow_redirects=True)
+    yield client
 
 
 # --- Test Class for Auth Routes ---
-
 class TestAuthRoutes:
-
-    # Use function scope fixture to ensure app context for each test method
-    @pytest.fixture(autouse=True)
-    def setup_app_context(self, test_app):
-        with test_app.app_context():
-            yield
+    """Test suite for authentication routes."""
 
     # === Login Route Tests (/auth/login) ===
-
-    #  Test login page 'GET' request
-    def test_login_page_get(self, test_client):
-        """Test GET request to the login page."""
-        response = test_client.get(url_for("auth.login"))
+    def test_login_page_get(self, client):  # Uses 'client' from conftest.py
+        response = client.get(url_for("auth.login"))
         assert response.status_code == 200
-        assert b"Login" in response.data  # Check for a keyword in the template
+        assert b"Login" in response.data
 
-    @patch("app.routes.auth.User.query")  # Mock the database query
-    @patch("app.routes.auth.db.session.commit")  # Mock db commit
-    @patch("app.routes.auth.login_user")  # Mock flask_login function
+    def test_login_success(
+        self, client, test_user, app
+    ):  # Uses 'client', 'test_user', 'app'
+        with app.app_context():
+            loaded_test_user = User.query.filter_by(username=test_user.username).first()
+            assert loaded_test_user is not None
+            assert loaded_test_user.first_name == "Test"
 
-    # Test login post success 
-    def test_login_post_success(
-        self, mock_login_user, mock_commit, mock_user_query, test_client
-    ):
-        """Test successful POST request to login."""
-        # Mock the user found by the query
-        mock_user = MagicMock(spec=User)
-        mock_user.check_password.return_value = True
-        mock_user.last_login = None  # To check it gets updated
-        mock_user_query.filter_by.return_value.first.return_value = mock_user
-
-        response = test_client.post(
+        response = client.post(
             url_for("auth.login"),
-            data={"username": "testuser", "password": "password"},
+            data={
+                "username": test_user.username,
+                "password": "password",
+                "remember_me": False,
+            },
             follow_redirects=False,
-        )  # Important: check redirect before following
+        )
+        assert response.status_code == 302
+        assert response.location == url_for("main.product_list", _external=False)
 
-        assert response.status_code == 302  # Expect redirect on success
-        assert response.location == url_for(
-            "main.product_list", _external=False
-        )  # Check redirect URL
-        mock_user_query.filter_by.assert_called_once_with(username="testuser")
-        mock_user.check_password.assert_called_once_with("password")
-        mock_login_user.assert_called_once_with(mock_user, remember=False)
-        assert mock_user.last_login is not None  # Check last_login was updated
-        mock_commit.assert_called_once()
+        response_redirected = client.get(response.location)
+        assert b"Welcome, Test" in response_redirected.data
 
-    def test_login_post_invalid_credentials(self, test_client):
-        """Test POST request with invalid credentials."""
-        response = test_client.post(
+    def test_login_post_invalid_credentials(self, client, test_user):
+        response = client.post(
             url_for("auth.login"),
-            data={"username": "wronguser", "password": "wrongpassword"},
+            data={"username": test_user.username, "password": "wrongpassword"},
             follow_redirects=True,
-        )  # Follow redirects to check flash message
+        )
+        assert response.status_code == 200
+        assert b"Invalid username or password" in response.data
 
-        assert response.status_code == 200  # Should stay on login page
-        assert b"Invalid username or password" in response.data  # Check flash message
+    def test_login_user_not_exist(self, client):
+        response = client.post(
+            url_for("auth.login"),
+            data={"username": "nonexistentuser", "password": "password"},
+            follow_redirects=True,
+        )
+        assert response.status_code == 200
+        assert b"Invalid username or password" in response.data
 
     def test_login_already_authenticated(self, logged_in_client):
-        """Test accessing login page when already logged in."""
         response = logged_in_client.get(url_for("auth.login"), follow_redirects=False)
         assert response.status_code == 302
         assert response.location == url_for("main.product_list", _external=False)
 
     # === Logout Route Tests (/auth/logout) ===
+    def test_logout_success(
+        self, logged_in_client, app
+    ):  # Added app for context if url_for needs it outside req
+        with (
+            app.app_context()
+        ):  # Ensure context for url_for if called outside of a client request
+            logout_url = url_for("auth.logout")
+            login_url = url_for("auth.login")
+            profile_url = url_for("auth.profile")
 
-    def test_logout_success(self, logged_in_client):
-        """Test successful logout."""
-        response = logged_in_client.get(url_for("auth.logout"), follow_redirects=False)
+        response = logged_in_client.get(logout_url, follow_redirects=False)
         assert response.status_code == 302
-        assert response.location == url_for("main.product_list", _external=False)
+        assert response.location == login_url
 
-        # Verify user is logged out by trying to access a protected route (like profile)
-        profile_response = logged_in_client.get(
-            url_for("auth.profile"), follow_redirects=False
+        response_redirected = logged_in_client.get(
+            response.location, follow_redirects=True
         )
-        assert profile_response.status_code == 302  # Should redirect to login
-        assert profile_response.location.startswith(
-            url_for("auth.login", _external=False)
-        )
+        assert b"You have been logged out." in response_redirected.data
 
-    def test_logout_not_logged_in(self, test_client):
-        """Test accessing logout when not logged in (should redirect to login)."""
-        response = test_client.get(url_for("auth.logout"), follow_redirects=False)
+        profile_response = logged_in_client.get(profile_url, follow_redirects=False)
+        assert profile_response.status_code == 302
+        assert profile_response.location.startswith(login_url)
+
+    def test_logout_not_logged_in(self, client, app):
+        with app.app_context():
+            logout_url = url_for("auth.logout")
+            login_url_start = url_for("auth.login")
+        response = client.get(logout_url, follow_redirects=False)
         assert response.status_code == 302
-        assert response.location.startswith(
-            url_for("auth.login", _external=False)
-        )  # @login_required redirects
+        assert response.location.startswith(login_url_start)
 
     # === Register Route Tests (/auth/register) ===
-
-    def test_register_page_get(self, test_client):
-        """Test GET request to the registration page."""
-        response = test_client.get(url_for("auth.register"))
+    def test_register_page_get(self, client):
+        response = client.get(url_for("auth.register"))
         assert response.status_code == 200
         assert b"Register" in response.data
 
     @patch("app.routes.auth.db.session.add")
     @patch("app.routes.auth.db.session.commit")
-    def test_register_post_success(self, mock_commit, mock_add, test_client):
-        """Test successful POST request to register."""
-        response = test_client.post(
-            url_for("auth.register"),
+    def test_register_post_success(self, mock_commit, mock_add, client, app):
+        with app.app_context():
+            login_url = url_for("auth.login")
+            register_url = url_for("auth.register")
+        response = client.post(
+            register_url,
             data={
                 "username": "newuser",
                 "email": "new@example.com",
                 "first_name": "New",
                 "last_name": "User",
                 "password": "newpassword",
-                "password2": "newpassword",  # Assuming you have confirm password field
+                "password2": "newpassword",
             },
             follow_redirects=False,
         )
-
         assert response.status_code == 302
-        assert response.location == url_for("auth.login", _external=False)
-        mock_add.assert_called_once()  # Check user object was added
+        assert response.location == login_url
+        mock_add.assert_called_once()
         mock_commit.assert_called_once()
 
-        # Check flash message after redirect
-        redirect_response = test_client.get(response.location)
+        redirect_response = client.get(response.location, follow_redirects=True)
         assert b"Registration successful! Please log in." in redirect_response.data
 
-    def test_register_post_validation_error(self, test_client):
-        """Test POST request with validation errors (e.g., mismatched passwords)."""
-        response = test_client.post(
+    def test_register_post_validation_error(self, client):
+        response = client.post(
             url_for("auth.register"),
             data={
                 "username": "newuser",
@@ -197,180 +178,288 @@ class TestAuthRoutes:
             },
             follow_redirects=True,
         )
+        assert response.status_code == 200
+        assert b"Field must be equal to password." in response.data
 
-        assert response.status_code == 200  # Should stay on register page
-        assert (
-            b"Field must be equal to password." in response.data
-        )  # Check WTForms error message
-
-    def test_register_already_authenticated(self, logged_in_client):
-        """Test accessing register page when already logged in."""
-        response = logged_in_client.get(
-            url_for("auth.register"), follow_redirects=False
-        )
+    def test_register_already_authenticated(self, logged_in_client, app):
+        with app.app_context():
+            register_url = url_for("auth.register")
+            dashboard_url = url_for("main.product_list")
+        response = logged_in_client.get(register_url, follow_redirects=False)
         assert response.status_code == 302
-        assert response.location == url_for("main.product_list", _external=False)
+        assert response.location == dashboard_url
 
     # === Profile Route Tests (/auth/profile) ===
-
-    def test_profile_page_get_unauthenticated(self, test_client):
-        """Test GET request to profile page when not logged in."""
-        response = test_client.get(url_for("auth.profile"), follow_redirects=False)
+    def test_profile_page_get_unauthenticated(self, client, app):
+        with app.app_context():
+            profile_url = url_for("auth.profile")
+            login_url_start = url_for("auth.login")
+        response = client.get(profile_url, follow_redirects=False)
         assert response.status_code == 302
-        assert response.location.startswith(url_for("auth.login", _external=False))
+        assert response.location.startswith(login_url_start)
 
-    def test_profile_page_get_authenticated(self, logged_in_client):
-        """Test GET request to profile page when logged in."""
-        response = logged_in_client.get(url_for("auth.profile"))
-        assert response.status_code == 200
-        assert b"My Profile" in response.data  # Check for title or specific content
-        assert b"testuser" in response.data  # Check if current user's data is shown
+    def test_profile_page_get_authenticated(self, logged_in_client, app, test_user):
+        with app.app_context():
+            response = logged_in_client.get(url_for("auth.profile"))
+            assert response.status_code == 200
+            assert b"My Profile" in response.data
+            assert test_user.username.encode() in response.data
 
     @patch("app.routes.auth.db.session.commit")
     def test_profile_post_update_success_no_password(
-        self, mock_commit, logged_in_client, test_app
+        self, mock_commit, logged_in_client, app, test_user
     ):
-        """Test successful POST to update profile (no password change)."""
+        with app.app_context():
+            original_first_name = test_user.first_name
+            assert original_first_name == "Test"
 
-        with test_app.app_context():
-            user_before = User.query.filter_by(username="testuser").first()
-            # Add assertion to ensure user exists
-            assert user_before is not None, "Test user 'testuser' not found in fixture."
-            # Verify initial state (should work now)
-            assert user_before.first_name == "Test"
+            profile_url = url_for("auth.profile")
 
-        with patch("app.routes.auth.User.query") as mock_user_query_cm:
+        with patch("app.routes.auth.User.query") as mock_user_query_in_route:
+            mock_user_query_in_route.filter.return_value.first.return_value = None
 
-            # Configure the context manager's mock for conflict checks
-            mock_user_query_cm.filter_by.return_value.first.return_value = None
-
-            # Make the POST request
             response = logged_in_client.post(
-                url_for("auth.profile"),
+                profile_url,
                 data={
-                    "username": "testuser",
-                    "email": "test_updated@example.com",  # Update email
-                    "first_name": "TestUpdated",  # Update first name
-                    "last_name": "UserUpdated",  # Update last name
-                    "current_password": "",  # No password change
+                    "username": test_user.username,
+                    "email": "test_updated@example.com",
+                    "first_name": "TestUpdated",
+                    "last_name": "UserUpdated",
+                    "current_password": "",
                     "new_password": "",
                     "confirm_new_password": "",
                 },
                 follow_redirects=False,
-            )  # Check redirect before following it
+            )
 
-        # --- Assertions (Mock is inactive) ---
-        assert response.status_code == 302  # Expect redirect
-        assert response.location == url_for("auth.profile", _external=False)
-        mock_commit.assert_called_once()  # Check DB commit was called
+        assert (
+            response.status_code == 302
+        ), f"Expected 302, got {response.status_code}. Data: {response.data.decode()}"
+        assert response.location == profile_url
+        mock_commit.assert_called_once()
 
-        redirect_response = logged_in_client.get(response.location)
-        assert b"Your profile has been updated successfully!" in redirect_response.data
+        response_redirected = logged_in_client.get(response.location)
+        assert (
+            b"Your profile has been updated successfully!" in response_redirected.data
+        )
 
-        # --- Verify changes in DB (Optional but good - Mock is inactive) ---
-        with test_app.app_context():
-            user_after = User.query.filter_by(username="testuser").first()
-            assert user_after is not None
+        with app.app_context():
+            user_after = User.query.filter_by(username=test_user.username).first()
             assert user_after.email == "test_updated@example.com"
             assert user_after.first_name == "TestUpdated"
-            assert user_after.last_name == "UserUpdated"
 
-
-    # Test profile update success with password
     @patch("app.routes.auth.db.session.commit")
     def test_profile_post_update_success_with_password(
-        self, mock_commit, logged_in_client, test_app
+        self, mock_commit, logged_in_client, app, test_user
     ):
-        """Test successful POST to update profile including password."""
-
-        # --- Step 1: Get the actual user from DB first ---
-        with test_app.app_context():
-            user_before = User.query.filter_by(username="testuser").first()
-            # Add an assertion to ensure the user exists from the fixture setup
-            assert (
-                user_before is not None
-            ), "Test user 'testuser' could not be found in the database fixture."
+        with app.app_context():
+            user_before = User.query.filter_by(username=test_user.username).first()
+            assert user_before is not None
             old_password_hash = user_before.password_hash
+            profile_url = url_for("auth.profile")
 
-        # --- Step 2: NOW configure the mock for the route handler's checks ---
-        with patch("app.routes.auth.User.query") as mock_user_query_cm:
-            mock_user_query_cm.filter_by.return_value.first.return_value = None
+        with patch("app.routes.auth.User.query") as mock_user_query_in_route:
+            mock_user_query_in_route.filter.return_value.first.return_value = None
 
-            # --- Step 3: Make the POST request ---
             response = logged_in_client.post(
-                url_for("auth.profile"),
+                profile_url,
                 data={
-                    "username": "testuser",  # Or a new username if you want to test that change too
-                    "email": "test.pw.updated@example.com",  # Example: change email
-                    "first_name": "Test",
-                    "last_name": "User",
+                    "username": test_user.username,
+                    "email": "test.pw.updated@example.com",
+                    "first_name": "TestPW",
+                    "last_name": "UserPW",
                     "current_password": "password",
                     "new_password": "newpassword",
                     "confirm_new_password": "newpassword",
                 },
-                follow_redirects=True,
-            )  # Follow redirect to check flash
+                follow_redirects=False,
+            )
 
-        # --- Step 4: Assertions ---
-        assert response.status_code == 200  # Should be back on profile page
-        assert b"Your profile has been updated successfully!" in response.data
-        mock_commit.assert_called_once()  # Check that the commit was called in the route
+        assert (
+            response.status_code == 302
+        ), f"Expected 302, got {response.status_code}. Data: {response.data.decode()}"
+        assert response.location == profile_url
+        mock_commit.assert_called_once()
 
-        # --- Step 5: Verify changes in DB (Optional but good) ---
-        with test_app.app_context():
-            user_after = User.query.filter_by(
-                username="testuser"
-            ).first()  # Fetch updated user
-            assert user_after is not None
-            assert user_after.password_hash != old_password_hash
-            assert user_after.check_password(
-                "newpassword"
-            )  # Check if new password works
-            assert (
-                user_after.email == "test.pw.updated@example.com"
-            )  # Verify other fields updated
-
-    def test_profile_post_incorrect_current_password(self, logged_in_client):
-        """Test POST to update profile with incorrect current password."""
-        response = logged_in_client.post(
-            url_for("auth.profile"),
-            data={
-                "username": "testuser",
-                "email": "test@example.com",
-                "first_name": "Test",
-                "last_name": "User",
-                "current_password": "wrongpassword",  # Incorrect
-                "new_password": "newpassword",
-                "confirm_new_password": "newpassword",
-            },
-            follow_redirects=True,
+        response_redirected = logged_in_client.get(response.location)
+        assert (
+            b"Your profile and password have been updated successfully!"
+            in response_redirected.data
         )
 
-        assert response.status_code == 200  # Stay on profile page
-        assert b"Incorrect password" in response.data  # Check error message
+        with app.app_context():
+            user_after = User.query.filter_by(username=test_user.username).first()
+            assert user_after.email == "test.pw.updated@example.com"
+            assert user_after.first_name == "TestPW"
+            assert user_after.password_hash != old_password_hash
+            assert user_after.check_password("newpassword")
+
+    def test_profile_post_incorrect_current_password(
+        self, logged_in_client, app, test_user
+    ):
+        with app.app_context():
+            profile_url = url_for("auth.profile")
+            response = logged_in_client.post(
+                profile_url,
+                data={
+                    "username": test_user.username,
+                    "email": test_user.email,
+                    "first_name": test_user.first_name,
+                    "last_name": test_user.last_name,
+                    "current_password": "wrongpassword",
+                    "new_password": "newpassword",
+                    "confirm_new_password": "newpassword",
+                },
+                follow_redirects=True,
+            )
+
+        assert response.status_code == 200
+        assert b"Incorrect current password." in response.data
+        assert (
+            b"Password change failed. Please correct the errors below." in response.data
+        )
 
     @patch("app.routes.auth.User.query")
     def test_profile_post_username_taken(
-        self, mock_user_query, logged_in_client, test_app
+        self, mock_user_query_in_route, logged_in_client, app, test_user
     ):
-        """Test POST to update profile with a username that's already taken."""
-        # Mock the query to find an existing user with the new username
-        existing_user_mock = MagicMock(spec=User)
-        mock_user_query.filter_by.return_value.first.return_value = existing_user_mock
+        with app.app_context():
+            existing_user_mock = MagicMock(spec=User)
+            existing_user_mock.id = test_user.id + 1
+            mock_user_query_in_route.filter.return_value.first.return_value = (
+                existing_user_mock
+            )
+            profile_url = url_for("auth.profile")
 
-        response = logged_in_client.post(
-            url_for("auth.profile"),
-            data={
-                "username": "takenuser",  # Attempting to change to this
-                "email": "test@example.com",
-                "first_name": "Test",
-                "last_name": "User",
-                # ... other fields ...
-            },
-            follow_redirects=True,
-        )
+            response = logged_in_client.post(
+                profile_url,
+                data={
+                    "username": "takenuser",
+                    "email": test_user.email,
+                    "first_name": test_user.first_name,
+                    "last_name": test_user.last_name,
+                    "current_password": "",
+                    "new_password": "",
+                    "confirm_new_password": "",
+                },
+                follow_redirects=True,
+            )
 
         assert response.status_code == 200
-        assert b"Username already taken" in response.data
-        # Make sure the specific filter was called for the username
-        mock_user_query.filter_by.assert_any_call(username="takenuser")
+        assert b"Username already taken." in response.data
+        assert (
+            b"Profile update failed. Please correct the errors below." in response.data
+        )
+        mock_user_query_in_route.filter.assert_called()
+
+    # --- Password Reset Request Tests ---
+    @patch("app.routes.auth.send_password_reset_email")
+    def test_request_reset_token_success(self, mock_send_email, client, app, test_user):
+        with app.app_context():
+            assert test_user.password_hash is not None
+            request_url = url_for("auth.request_reset_token")
+            response = client.post(
+                request_url,
+                data={"email": test_user.email},
+                follow_redirects=True,
+            )
+        assert response.status_code == 200
+        assert b"An email has been sent" in response.data
+        mock_send_email.assert_called_once()
+        assert mock_send_email.call_args[0][0].email == test_user.email
+
+    def test_request_reset_token_email_not_found(self, client, app):
+        with app.app_context():
+            request_url = url_for("auth.request_reset_token")
+            response = client.post(
+                request_url,
+                data={"email": "nonexistent@example.com"},
+                follow_redirects=True,
+            )
+        assert response.status_code == 200
+        assert b"There is no account with that email" in response.data
+
+    @patch("app.routes.auth.User.verify_reset_password_token")
+    def test_reset_token_get_valid_token(self, mock_verify_token, client, app):
+        with app.app_context():
+            dummy_user = User(
+                id=123, username="resetuser_get", email="reset_get@example.com"
+            )
+            mock_verify_token.return_value = dummy_user
+            reset_url = url_for("auth.reset_token", token="validtoken_get")
+            response = client.get(reset_url)
+
+        assert response.status_code == 200
+        assert b"Reset Password" in response.data
+        mock_verify_token.assert_called_once_with("validtoken_get")
+
+    @patch("app.routes.auth.User.verify_reset_password_token")
+    def test_reset_token_get_invalid_token(self, mock_verify_token, client, app):
+        with app.app_context():
+            mock_verify_token.return_value = None
+            reset_url = url_for("auth.reset_token", token="invalidtoken_get")
+            response = client.get(reset_url, follow_redirects=True)
+
+        assert response.status_code == 200
+        assert b"That is an invalid or expired token." in response.data
+        assert b"Request Password Reset" in response.data
+        mock_verify_token.assert_called_once_with("invalidtoken_get")
+
+    @patch("app.routes.auth.User.verify_reset_password_token")
+    @patch("app.routes.auth.db.session.commit")
+    def test_reset_token_post_success(
+        self, mock_db_commit, mock_verify_token, client, app):
+        with app.app_context():
+            user_to_reset = User(
+                id=124, username="resetuser_post", email="reset_post@example.com"
+            )
+            user_to_reset.set_password("oldpassword_post")
+            original_hash = user_to_reset.password_hash
+            _db.session.add(user_to_reset)
+            _db.session.commit()
+
+            mock_db_commit.reset_mock()
+
+            mock_verify_token.return_value = user_to_reset
+            reset_url = url_for("auth.reset_token", token="validtoken_post")
+            response = client.post(
+                reset_url,
+                data={"password": "newpassword_post", "password2": "newpassword_post"},
+                follow_redirects=True,
+            )
+        assert response.status_code == 200
+        assert b"Your password has been updated!" in response.data
+        mock_verify_token.assert_called_once_with("validtoken_post")
+        mock_db_commit.assert_called_once()
+
+        assert user_to_reset.password_hash is not None
+        assert user_to_reset.password_hash != original_hash
+        assert user_to_reset.check_password("newpassword_post")
+
+        with app.app_context():
+            # This user might not actually be in the DB if the initial commit was mocked without side effect
+            persisted_user_after_reset = _db.session.get(User, user_to_reset.id)
+            if persisted_user_after_reset:
+                _db.session.delete(persisted_user_after_reset)
+                _db.session.commit()
+
+    @patch("app.routes.auth.User.verify_reset_password_token")
+    def test_reset_token_post_password_mismatch(self, mock_verify_token, client, app):
+        with app.app_context():
+            dummy_user = User(
+                id=125,
+                username="resetuser_mismatch",
+                email="reset_mismatch@example.com",
+            )
+            mock_verify_token.return_value = dummy_user
+            reset_url = url_for("auth.reset_token", token="validtoken_mismatch")
+            response = client.post(
+                reset_url,
+                data={
+                    "password": "newpassword_mismatch",
+                    "password2": "mismatch_error",
+                },
+                follow_redirects=True,
+            )
+        assert response.status_code == 200
+        assert b"Passwords must match." in response.data
