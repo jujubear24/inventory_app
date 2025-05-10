@@ -13,3 +13,6 @@ class TestingConfig(Config):
     # SECRET_KEY = 'testing-secret-key' # Use the one from base/env unless needed for tests
     GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', 'dummy_test_id')
     GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', 'dummy_test_secret')
+
+
+
